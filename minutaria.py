@@ -41,6 +41,7 @@ if __name__ == '__main__':
     
     counter = timer.is_timing_reached()
     while counter == False:
+        print("Remaining : ")
         timer.print_timing()
         counter = timer.is_timing_reached()
         #print("\n" * 100)

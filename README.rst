@@ -1,22 +1,29 @@
 minutaria
 =========
 
-minutaria is a basic Python timer. The project is educational, it aims to teach myself programming, python programming, python's stdlib, tools and ecosystem, development best pratices, git and some software testing libraries or frameworks.
+minutaria is a basic Python timer. The project is educational, it aims to teach myself programming, python programming, python's stdlib, tools (pdb, venv...) and ecosystem, development best pratices, git and some software testing libraries or frameworks.
 
 Done features
 -------------
 
 - Use OOP approach
 - Use *datetime* module
-- Display time ISO 8601 format like as hh:mm:ss:mmmmmm
+- Display time ISO 8601 format like as hh:mm:ss.n
 
 Expected features
 -----------------
 
 - Accept argument in a terminal using a standard module
-- Manage favorite timers with a text file
-- Usable with a GTK GUI
+- Manage presets with a text file
 - Pythonic code (idiomatic style, PEP8...)
+- Play a sound at 00:00:00.0
+- Usable with a GTK GUI and so :
+    - theming light/dark
+    - reset the timer
+    - use preset
+    - add preset
+    - alarm period
+    - alarm volume
 
 Dependencies
 ------------
