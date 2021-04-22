@@ -41,12 +41,14 @@ if __name__ == '__main__':
     
     counter = timer.is_timing_reached()
     while counter == False:
-        print("Remaining : ")
+        print("minutaria" + "\n")
+        print("Remaining :"),
         timer.print_timing()
         counter = timer.is_timing_reached()
         #print("\n" * 100)
         #os.system("clear")
         os.system('cls' if os.name=='nt' else 'clear')
+    print("minutaria" + "\n")
     print("GONG !")
 
     

@@ -9,6 +9,7 @@ Done features
 - Use OOP approach
 - Use *datetime* module
 - Display time ISO 8601 format like as hh:mm:ss.n
+- ncurses interface via curses Python standard module
 
 Expected features
 -----------------
@@ -28,7 +29,7 @@ Expected features
 Dependencies
 ------------
 
-Nothing except Python 3 and modules from the standard library, currently only *datetime*.
+Nothing except Python 3 and modules from the standard library, currently only *datetime*, *curses* for the ncurses interface.
 
 License
 -------
