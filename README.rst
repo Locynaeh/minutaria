@@ -1,7 +1,7 @@
 minutaria
 =========
 
-minutaria is a basic Python timer. The project is educational, it aims to teach myself programming, python programming, python's stdlib, tools and ecosystem, development best pratices and some software testing libraries or frameworks.
+minutaria is a basic Python timer. The project is educational, it aims to teach myself programming, python programming, python's stdlib, tools and ecosystem, development best pratices, git and some software testing libraries or frameworks.
 
 Done features
 -------------
@@ -16,7 +16,7 @@ Expected features
 - Accept argument in a terminal using a standard module
 - Manage favorite timers with a text file
 - Usable with a GTK GUI
-- pythonic code (idiomatic style, PEP8...)
+- Pythonic code (idiomatic style, PEP8...)
 
 Dependencies
 ------------
