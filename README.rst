@@ -31,6 +31,12 @@ Dependencies
 
 Nothing except Python 3 and modules from the standard library, currently only *datetime*, *curses* for the ncurses interface.
 
+Use
+---
+
+minutaria.py module contains a basic term example.
+minutaria_curses.py is the basic ncurses interface.
+
 License
 -------
 
