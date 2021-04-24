@@ -1,7 +1,6 @@
 # -*-coding:Utf-8 -*
 
 from datetime import datetime, timedelta
-import os
 
 class Timer:
     """Simple timer printing as HH:MM:SS"""
@@ -32,24 +31,17 @@ class Timer:
         timing_to_reach = self._convert_delta_to_datetime()
         return self._actualization >= timing_to_reach
 
-    def print_timing(self):
+    @property
+    def get_timing(self):
         """Print the actual remaining time to reach 00:00:00"""
-        print(self._actualized_delta)
+        return self._actualized_delta.__str__()
         
 if __name__ == '__main__':
-    timer = Timer(seconds = 10)
+    timer = Timer(seconds = 5)
     
     counter = timer.is_timing_reached()
     while counter == False:
-        print("minutaria" + "\n")
-        print("Remaining :"),
-        timer.print_timing()
+        print("minutaria -", "Remaining :", timer.get_timing, end='\r')
         counter = timer.is_timing_reached()
-        #print("\n" * 100)
-        #os.system("clear")
-        os.system('cls' if os.name=='nt' else 'clear')
-    print("minutaria" + "\n")
-    print("GONG !")
-
-    
-    
+    # Print 3 "GONG !" and some space to clear the line
+    print("GONG ! " * 3 + ' '*17)

@@ -29,7 +29,7 @@ Expected features
 Dependencies
 ------------
 
-Nothing except Python 3 and modules from the standard library, currently only *datetime*, *curses* for the ncurses interface.
+Nothing except Python 3 and modules from the standard library, currently only *datetime* and *curses* for the ncurses interface.
 
 Use
 ---

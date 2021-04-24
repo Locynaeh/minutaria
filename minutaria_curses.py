@@ -34,18 +34,19 @@ def main(stdscr):
         while counter == False:
             timer_window.addstr(0, 0, "minutaria", curses.A_STANDOUT)
             timer_window.addstr(2, 0,
-                        "Remaining : " + timer._actualized_delta.__str__())
+                        "Remaining : " + timer.get_timing)
             counter = timer.is_timing_reached()
             timer_window.refresh()
 
         timer_window.clear()
         timer_window.refresh()
 
-        # Annouce timer's ending by a "Gong !" and 3 flashes
+        # Annouce timer's ending by a "Gong !" and a flash, 3 times
         timer_window.addstr(0, 0, "minutaria", curses.A_STANDOUT)
-        timer_window.addstr(2, 0, "GONG !")
         timer_window.refresh()
         for x in range(1, 4):
+            timer_window.addstr(2, 0, "GONG ! " * x)
+            timer_window.refresh()
             curses.flash()
             curses.napms(FLASH_PERIOD)
         
