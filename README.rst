@@ -34,8 +34,9 @@ Nothing except Python 3 and modules from the standard library, currently only *d
 Use
 ---
 
-minutaria.py module contains a basic term example.
-minutaria_curses.py is the basic ncurses interface.
+minutaria.py module contains a basic term example and so can be launched via command line.
+
+minutaria_curses.py contains the basic ncurses interface and can also be launched via command line. It offers a relaunch/quit functionality.
 
 License
 -------
