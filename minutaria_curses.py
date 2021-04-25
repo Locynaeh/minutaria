@@ -6,7 +6,7 @@
 # Give the user  a start/quit command at the beginning
 # and the choice to relaunch the same timer or quit anytime
 
-import minutaria
+import libminutaria
 import curses # see https://docs.python.org/fr/3.7/howto/curses.html
 from datetime import timedelta
 
@@ -52,7 +52,7 @@ def main(stdscr):
         timer_window.nodelay(True)
 
         # Initialize the timer and a counter
-        timer = minutaria.Timer(hours=TIMER_HOURS,
+        timer = libminutaria.Timer(hours=TIMER_HOURS,
                                 minutes=TIMER_MIN,
                                 seconds=TIMER_SEC)
         counter = timer.is_timing_reached()
