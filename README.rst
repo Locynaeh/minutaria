@@ -9,15 +9,13 @@ Done features
 - Use OOP approach
 - Use *datetime* module
 - Display time ISO 8601 format like as hh:mm:ss.n
-- ncurses interface via curses Python standard module
+- ncurses interface via *curses* Python standard module with basic start/relaunch/quit command
 
 Expected features
 -----------------
 
-- Accept argument in a terminal using a standard module
+- Accept argument in a terminal using a standard module to select duration
 - Manage presets with a text file
-- Pythonic code (idiomatic style, PEP8...)
-- Play a sound at 00:00:00.0
 - Usable with a GTK GUI and so :
     - theming light/dark
     - reset the timer
@@ -25,6 +23,8 @@ Expected features
     - add preset
     - alarm period
     - alarm volume
+    - play a sound at 00:00:00.0
+- Pythonic code (idiomatic style, PEP8...)
 
 Dependencies
 ------------
@@ -34,9 +34,9 @@ Nothing except Python 3 and modules from the standard library, currently only *d
 Use
 ---
 
-minutaria.py module contains a basic term example and so can be launched via command line.
+libminutaria.py module contains a basic terminal example and so can be launched via command line.
 
-minutaria_curses.py contains the basic ncurses interface and can also be launched via command line. It offers a relaunch/quit functionality.
+minutaria_curses.py contains the basic ncurses interface and can also be launched via command line. It offers a start/relaunch/quit functionality.
 
 License
 -------
