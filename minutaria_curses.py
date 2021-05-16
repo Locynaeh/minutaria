@@ -11,17 +11,17 @@ import curses # see https://docs.python.org/fr/3.7/howto/curses.html
 from datetime import timedelta
 
 #Timer choosen duration
-TIMER_HOURS = 0
-TIMER_MIN = 0
-TIMER_SEC = 5
+libminutaria.TIMER_HOURS
+libminutaria.TIMER_MIN
+libminutaria.TIMER_SEC
 
 # Duration between flashes at the end of the timer
 FLASH_PERIOD = 1000
 
 # Keep a timestamp of the initial timing
-initial_timing = timedelta(seconds=TIMER_SEC,
-                            minutes=TIMER_MIN,
-                            hours=TIMER_HOURS)
+initial_timing = timedelta(hours=libminutaria.TIMER_HOURS,
+                           minutes=libminutaria.TIMER_MIN,
+                           seconds=libminutaria.TIMER_SEC)
 
 def main(stdscr):
     # Withdraw cursor visiblity for aesthetic reasons
@@ -52,9 +52,9 @@ def main(stdscr):
         timer_window.nodelay(True)
 
         # Initialize the timer and a counter
-        timer = libminutaria.Timer(hours=TIMER_HOURS,
-                                minutes=TIMER_MIN,
-                                seconds=TIMER_SEC)
+        timer = libminutaria.Timer(hours=libminutaria.TIMER_HOURS,
+                                   minutes=libminutaria.TIMER_MIN,
+                                   seconds=libminutaria.TIMER_SEC)
         counter = timer.is_timing_reached()
 
         # Launch the timer and print the remaining time
