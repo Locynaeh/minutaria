@@ -5,17 +5,6 @@ from datetime import datetime, timedelta
 from sys import exit
 import argparse
 
-# Global variables to be used as default or modified by user input
-TIMER_HOURS = 0 # min 0, max 23
-TIMER_MIN = 0   # min 0, max 59
-TIMER_SEC = 5   # min 0, max 59
-
-#Printable default duration
-default_duration = timedelta(hours =+ TIMER_HOURS,
-                             minutes =+ TIMER_MIN,
-                             seconds =+ TIMER_SEC)
-DEFAULT = str(default_duration)
-
 class Timer:
     """Simple timer printing as HH:MM:SS"""
     def __init__(self, hours = 0, minutes = 0, seconds = 0):
@@ -81,7 +70,16 @@ class Preset:
         #Penser à minifier l'input
         pass
 
-def minutaria_cli():
+
+        """
+        try:
+            with open('/tmp/fichier', 'w') as fichier:
+                # faire un truc avec le fichier
+        except EnvironmentError:
+            # gérer l'erreur
+        """
+
+def minutaria_cli(default_timer):
     parser = argparse.ArgumentParser(prog="minutaria",
                                      description="Execute a given timer from "
                                                  "min 00:00:01 to max 23:59:59."
@@ -89,7 +87,8 @@ def minutaria_cli():
                                                  "be used with duration "
                                                  "parameters.",
                                      epilog=f"If no timer is provided, "
-                                            f"execute the default : {DEFAULT}.")
+                                            f"execute the default: "
+                                            f"{default_timer}.")
     group = parser.add_mutually_exclusive_group()
     parser.add_argument("-v",
                     "--version",
@@ -153,25 +152,29 @@ def minutaria_cli():
               f" {args.seconds} (choose from 1 to 59)")
         exit()
 
-    # Access global variables to be modified if needeed
-    global TIMER_HOURS, TIMER_MIN, TIMER_SEC
+    # Container for timer values
+    timer_values = {
+        "timer_hours": None,
+        "timer_min": None,
+        "timer_secs": None
+    }
 
     # Actualize timing global variables if at list one CLI argument is used
     if args.hours or args.minutes or args.seconds:
         if args.hours == None:
-            TIMER_HOURS = 0
+            timer_values["timer_hours"] = 0
         else:
-            TIMER_HOURS = args.hours
+            timer_values["timer_hours"] = args.hours
 
         if args.minutes == None:
-            TIMER_MIN = 0
+            timer_values["timer_min"] = 0
         else:
-            TIMER_MIN = args.minutes
+            timer_values["timer_min"] = args.minutes
 
         if args.seconds == None:
-            TIMER_SEC = 0
+            timer_values["timer_secs"] = 0
         else:
-            TIMER_SEC = args.seconds
+            timer_values["timer_secs"] = args.seconds
 
     # Check whether the user input a timer with the name of the preset to create
     if args.add_preset and (not args.hours
@@ -185,12 +188,12 @@ def minutaria_cli():
         # Create the corresponding preset and quit
         new_preset = Preset()
         new_preset.add_preset(args.add_preset,
-                              TIMER_HOURS,
-                              TIMER_MIN,
-                              TIMER_SEC)
-        new_preset_duration = timedelta(hours =+ TIMER_HOURS,
-                                        minutes =+ TIMER_MIN,
-                                        seconds =+ TIMER_SEC)
+                              timer_values["timer_hours"],
+                              timer_values["timer_min"],
+                              timer_values["timer_secs"])
+        new_preset_duration = timedelta(hours =+ timer_values["timer_hours"],
+                                        minutes =+ timer_values["timer_min"],
+                                        seconds =+ timer_values["timer_secs"])
 
         print("New preset added: "
               f"{args.add_preset.capitalize()} - {str(new_preset_duration)}")
@@ -209,12 +212,12 @@ def minutaria_cli():
         # Modify the corresponding preset and quit
         preset_to_modify = Preset()
         preset_to_modify.modify_preset_duration(args.modify_preset_duration,
-                                                TIMER_HOURS,
-                                                TIMER_MIN,
-                                                TIMER_SEC)
-        modified_preset_duration = timedelta(hours =+ TIMER_HOURS,
-                                             minutes =+ TIMER_MIN,
-                                             seconds =+ TIMER_SEC)
+                                                timer_values["timer_hours"],
+                                                timer_values["timer_min"],
+                                                timer_values["timer_secs"])
+        modified_preset_duration = timedelta(hours =+ timer_values["timer_hours"],
+                                             minutes =+ timer_values["timer_min"],
+                                             seconds =+ timer_values["timer_secs"])
         print("New preset duration: "
               f"{args.modify_preset_duration.capitalize()}"
               f" - {str(modified_preset_duration)}")
@@ -256,31 +259,37 @@ def minutaria_cli():
         """
         preset_to_get = Preset()
         preset_to_use = preset_to_get.get_preset(args.use_preset)
-        TIMER_HOURS = preset_to_use["hours"]
-        TIMER_MIN = preset_to_use["minutes"]
-        TIMER_SEC = preset_to_use["seconds"]
+        timer_values["timer_hours"] = preset_to_use["hours"]
+        timer_values["timer_min"] = preset_to_use["minutes"]
+        timer_values["timer_secs"] = preset_to_use["seconds"]
         """
 
-    return args
-
-    # minutaria: error: argument -H/--hours: invalid choice: 24 (choose from 0 to 23)
-    # ValueError: hour must be in 0..23
-
-    """
-    try:
-    with open('/tmp/fichier', 'w') as fichier:
-        # faire un truc avec le fichier
-except EnvironmentError:
-    # gérer l'erreur
-    """
+    return timer_values
 
 if __name__ == '__main__':
-    args = minutaria_cli()
+    # Default parameters to be use if the script is launched without argument
+    # or modified by user input
+    TIMER_HOURS = 0 # min 0, max 23
+    TIMER_MIN = 0   # min 0, max 59
+    TIMER_SEC = 5   # min 0, max 59
 
+    #Printable default duration
+    default_duration = timedelta(hours =+ TIMER_HOURS,
+                                 minutes =+ TIMER_MIN,
+                                 seconds =+ TIMER_SEC)
+    DEFAULT = str(default_duration)
 
+    # Launch CLI and get timer values if user input
+    timer_values = minutaria_cli(DEFAULT)
 
-    print(DEFAULT)
-    print(args)
+    if (timer_values["timer_hours"]
+        or timer_values["timer_min"]
+        or timer_values["timer_secs"]):
+            TIMER_HOURS = timer_values["timer_hours"]
+            TIMER_MIN = timer_values["timer_min"]
+            TIMER_SEC = timer_values["timer_secs"]
+
+    print(timer_values)
     print(TIMER_HOURS, TIMER_MIN, TIMER_SEC, sep=":")
 
     """timer = Timer(hours = TIMER_HOURS,
@@ -295,3 +304,6 @@ if __name__ == '__main__':
 
     # Print 3 "GONG !" and some spaces to clear the line
     print("GONG ! " * 3 + ' '*17)"""
+
+    # minutaria: error: argument -H/--hours: invalid choice: 24 (choose from 0 to 23)
+    # ValueError: hour must be in 0..23
