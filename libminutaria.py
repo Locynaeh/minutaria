@@ -1,6 +1,10 @@
 #! /usr/bin/python3
 # -*-coding:Utf-8 -*
 
+# libminutaria
+# Provide a library allowing to create timers, presets managed by a JSON file
+# and an integrable CLI to manage both.
+
 from datetime import datetime, timedelta
 from sys import exit
 import argparse
@@ -12,7 +16,7 @@ class Timer:
     Allow to launch a given timer, check remaining time before 00:00:00, check
     wether timing is reached, get the current timing allong the process.
     """
-    def __init__(self, hours = 0, minutes = 0, seconds = 0):
+    def __init__(self, hours: int = 0, minutes: int = 0, seconds: int = 0):
         self._base = datetime.now()
         self._actualization = datetime(self._base.year,
                                        self._base.month,
@@ -206,7 +210,7 @@ class Preset:
                         json.dump(json_data, preset_file_write, indent=4)
                     return True
 
-def minutaria_cli(default_timer):
+def minutaria_cli(default_timer: str):
     """
     CLI for minutaria supporting choosing timer duration by hours, minutes
     and seconds separately and managing preset : add, delete, rename, change
@@ -455,7 +459,7 @@ if __name__ == '__main__':
     # Check remaining time along the timer and print it
     counter = timer.is_timing_reached()
     while counter == False:
-        print("minutaria -", "Remaining :", timer.get_timing, end='\r',
+        print("minutaria -", "Remaining :", timer.get_timing[:9], end='\r',
               flush=True)
         counter = timer.is_timing_reached()
 

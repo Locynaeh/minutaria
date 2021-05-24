@@ -50,7 +50,7 @@ def main(stdscr):
         # Launch the timer and print the remaining time
         while counter == False:
             timer_window.addstr(0, 0, "minutaria", curses.A_STANDOUT)
-            timer_window.addstr(2, 0, "Remaining : " + timer.get_timing)
+            timer_window.addstr(2, 0, "Remaining : " + timer.get_timing[:9])
             timer_window.addstr(4, 0, "Press r to relaunch or q to quit...")
             counter = timer.is_timing_reached()
             # Manage user's choice for the timer loop
