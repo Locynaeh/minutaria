@@ -20,6 +20,7 @@ Done
 - Use *argparse* module to built the CLI utility
 - Manage presets and use *json* module to store them
 - ncurses interface via *curses* Python standard module with basic start/relaunch/quit command also usable with the lib's CLI
+- Gradually introduce type hints
 
 Expected
 --------
