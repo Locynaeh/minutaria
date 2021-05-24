@@ -10,18 +10,8 @@ import libminutaria
 import curses # see https://docs.python.org/fr/3.7/howto/curses.html
 from datetime import timedelta
 
-#Timer choosen duration
-TIMER_HOURS = 0 # min 0, max 23
-TIMER_MIN = 0   # min 0, max 59
-TIMER_SEC = 5   # min 0, max 59
-
 # Duration between flashes at the end of the timer
 FLASH_PERIOD = 1000
-
-# Keep a timestamp of the initial timing
-initial_timing = timedelta(hours=TIMER_HOURS,
-                           minutes=TIMER_MIN,
-                           seconds=TIMER_SEC)
 
 def main(stdscr):
     # Withdraw cursor visiblity for aesthetic reasons
@@ -101,4 +91,33 @@ def main(stdscr):
                 break
 
 if __name__ == '__main__':
+    # Default parameters to be use if the script is launched without argument
+    # or modified by user input
+    TIMER_HOURS = 0 # min 0, max 23
+    TIMER_MIN = 0   # min 0, max 59
+    TIMER_SEC = 5   # min 0, max 59
+
+    #Printable default script duration
+    default_duration = timedelta(hours =+ TIMER_HOURS,
+                                 minutes =+ TIMER_MIN,
+                                 seconds =+ TIMER_SEC)
+    DEFAULT = str(default_duration)
+
+    # Launch CLI and get timer values if user input
+    timer_values = libminutaria.minutaria_cli(DEFAULT)
+
+    # Update timer parameters if modified by CLI
+    if (timer_values["timer_hours"]
+        or timer_values["timer_min"]
+        or timer_values["timer_secs"]):
+            TIMER_HOURS = timer_values["timer_hours"]
+            TIMER_MIN = timer_values["timer_min"]
+            TIMER_SEC = timer_values["timer_secs"]
+
+    # Keep a timestamp of the final initial timing choosen after CLI use
+    initial_timing = timedelta(hours=TIMER_HOURS,
+                               minutes=TIMER_MIN,
+                               seconds=TIMER_SEC)
+
+    # Launch the curses main loop
     curses.wrapper(main)
