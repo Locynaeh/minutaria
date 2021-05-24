@@ -3,7 +3,7 @@ minutaria
 
 minutaria is a basic Python timer.
 
-The project is educational, it aims to teach myself programming, python programming, python's stdlib, tools (pdb, venv...) and ecosystem, development best pratices, git and some software testing libraries or frameworks.
+The project is educational, it aims to teach myself programming, python programming, python's stdlib, tools (pdb, venv, mypy...) and ecosystem, development best pratices, git and some software testing libraries or frameworks.
 
 The project is separed in 3 parts :
 
@@ -16,14 +16,14 @@ Done
 
 - Use OOP approach
 - Use *datetime* module
-- Use *argparse* module to built the CLI utility
 - Display time ISO 8601 format like as hh:mm:ss.n
-- ncurses interface via *curses* Python standard module with basic start/relaunch/quit command
+- Use *argparse* module to built the CLI utility
+- Manage presets and use *json* module to store them
+- ncurses interface via *curses* Python standard module with basic start/relaunch/quit command also usable with the lib's CLI
 
 Expected
 --------
 
-- Manage presets with a text file
 - Usable with a GTK GUI and so :
     - theming light/dark
     - reset the timer
@@ -31,24 +31,24 @@ Expected
     - alarm period
     - alarm volume
     - play a sound at 00:00:00.0
-- Improve ncurses GUI with presets management
 - Pythonic code (idiomatic style, PEP8...)
 - Type checking
+- Unit tests
 
 Dependencies
 ------------
 
 Nothing except Python 3 and modules from the standard library, currently :
 
-- *datetime*, *argparse* and *sys* for the lib
+- *datetime*, *argparse*, *sys* and *json* for the lib
 - *curses* and *datetime* for the ncurses interface.
 
 Use
 ---
 
-libminutaria.py module contains is fully usable (except presets management for now) via command line. Execute a default timer if launched without argument. Use -h/--help arguments for more information.
+libminutaria.py module contains is fully usable via command line. Execute a default timer if launched without argument. Use -h/--help arguments for more information.
 
-minutaria_curses.py contains the basic ncurses interface and so can also be launched via command line. It offers a start/relaunch/quit functionality but doesn't use CLI arguments at the moment.
+minutaria_curses.py contains the basic ncurses interface and so shall be launched via command line. It offers a start/relaunch/quit functionality and is fully usable with CLI arguments identically to libminutaria.py.
 
 License
 -------
