@@ -32,8 +32,10 @@ class Timer:
                                            minutes=+minutes,
                                            seconds=+seconds)
     def _convert_delta_to_datetime(self):
-        """Convert the timedelta object to a datetime object allowing arithmetic
-        on it"""
+        """
+        Convert the timedelta object to a datetime object allowing arithmetic
+        on it
+        """
         return self._base + self._delta
 
     def _rebase_current_time(self):
@@ -42,14 +44,14 @@ class Timer:
         self._actualized_delta = (self._convert_delta_to_datetime()
                                   - self._actualization)
 
-    def is_timing_reached(self):
+    def is_timing_reached(self) -> bool:
         """Return TRUE if timing reached 00:00:00"""
         self._rebase_current_time()
         timing_to_reach = self._convert_delta_to_datetime()
         return self._actualization >= timing_to_reach
 
     @property
-    def get_timing(self):
+    def get_timing(self) -> str:
         """Return the actual remaining time to reach 00:00:00 as a string"""
         return str(self._actualized_delta)
 
@@ -63,7 +65,7 @@ class Preset:
         except FileNotFoundError:
             with open('preset.json', 'w') as preset_file_write:
                 json.dump([], preset_file_write, indent=4)
-    def add_preset(self, name: str, hours: int = 0, minutes: int = 0, seconds: int = 0):
+    def add(self, name: str, hours: int = 0, minutes: int = 0, seconds: int = 0):
         """
         Check wether the choosen name does exist, if not create the preset and
         write it in the preset.json file and return the json object added as a
@@ -72,7 +74,7 @@ class Preset:
         # Create a data set to be inclued, preset name is lowercased
         # Check wether the name already exist
         try:
-            self.get_preset(name)
+            self.get(name)
         except ValueError:
             self.preset_name = name.lower()
             self.hours = hours
@@ -81,9 +83,9 @@ class Preset:
             # Prepare the set in a dict to be added as a json object
             preset_dict_to_append = {"name": self.preset_name,
                                      "duration": {"hours": self.hours,
-                                                 "min": self.min,
-                                                 "secs": self.secs
-                                                 }
+                                                  "min": self.min,
+                                                  "secs": self.secs
+                                                  }
                                      }
             # Open the json preset file to add the new preset
             with open('preset.json', 'r') as preset_file_read:
@@ -98,7 +100,7 @@ class Preset:
         else:
             raise ValueError("ValueError: already existing preset")
 
-    def get_preset(self, name: str):
+    def get(self, name: str):
         """
         Check wether the preset name does exist, if not raise an exception, if
         yes return a dict containing timer values.
@@ -122,13 +124,13 @@ class Preset:
                     self.timer_values["seconds"] = preset["duration"]["secs"]
 
         if (self.timer_values["hours"] or
-           self.timer_values["minutes"] or
-           self.timer_values["seconds"]) is None:
+            self.timer_values["minutes"] or
+            self.timer_values["seconds"]) is None:
                raise ValueError("ValueError: Preset not found")
 
         return self.timer_values
 
-    def delete_preset(self, name: str):
+    def delete(self, name: str) -> bool:
         """
         Check wether the preset name does exist, if not return None, if yes
         delete the preset from the preset.json file and return True.
@@ -136,7 +138,7 @@ class Preset:
         # Check wether the preset exist
         # If not raise the corresponding exception
         try:
-            self.get_preset(name)
+            self.get(name)
         except ValueError as exception:
             raise exception
         # Preset name is lowercased to be searched
@@ -156,7 +158,7 @@ class Preset:
                         json.dump(json_data, preset_file_write, indent=4)
                     return True
 
-    def rename_preset(self, old_name: str, new_name: str):
+    def rename(self, old_name: str, new_name: str) -> bool:
         """
         Check wether the preset name to change does exist, if not raise an
         exception. Check wether the new preset name does exist, if not rename
@@ -165,11 +167,11 @@ class Preset:
         """
         # Check wether the preset exist and if the new name is available
         try:
-            self.get_preset(old_name)
+            self.get(old_name)
         except ValueError as exception:
             raise exception
         try:
-            self.get_preset(new_name)
+            self.get(new_name)
         except ValueError:
             # Preset name is lowercased to be searched
             self.old_preset_name = old_name.lower()
@@ -190,15 +192,15 @@ class Preset:
                         return True
         else:
             raise ValueError("ValueError: already existing preset")
-    def modify_preset_duration(self, name: str, hours: int, minutes: int, seconds: int):
+    def set_duration(self, name: str, hours: int, minutes: int, seconds: int) -> bool:
         """
         Check wether the choosen name does exist, if not raise an exception, if
-        yes change the preset duration according to parameters, write it in the
+        yes update the preset duration according to parameters, write it in the
         preset.json file and return True.
         """
         # Check wether the preset exist
         try:
-            self.get_preset(name)
+            self.get(name)
         except ValueError as exception:
             raise exception
         # Preset name is lowercased to be searched
@@ -338,25 +340,26 @@ def minutaria_cli(default_timer: str):
         new_preset = Preset()
 
         try:
-            new_preset.add_preset(args.add_preset,
-                                 timer_values["timer_hours"],
-                                 timer_values["timer_min"],
-                                 timer_values["timer_secs"])
+            new_preset.add(args.add_preset,
+                           timer_values["timer_hours"],
+                           timer_values["timer_min"],
+                           timer_values["timer_secs"])
             new_preset_duration = timedelta(hours =+ timer_values["timer_hours"],
                                             minutes =+ timer_values["timer_min"],
                                             seconds =+ timer_values["timer_secs"])
             print("New preset added: "
-                  f"{args.add_preset.capitalize()} - {str(new_preset_duration)}")
+                  f"{args.add_preset.capitalize()} - "
+                  f"{str(new_preset_duration)}")
             exit()
         except ValueError:
             print(f"The preset name {args.add_preset.capitalize()} "
-                 "already exist. Please choose an other name.")
+                  f"already exist. Please choose an other name.")
             exit()
 
     # Check whether the user input a timer with the name of the preset to modify
     if args.modify_preset_duration and (not args.hours
-                                   and not args.minutes
-                                   and not args.seconds):
+                                        and not args.minutes
+                                        and not args.seconds):
         print(f"minutaria: Error: argument -mpd/--modify_preset_duration: "
               f"incomplete input: {args.modify_preset_duration} (indicate "
               f"preset name and corresponding timer to modify with dedicated "
@@ -366,18 +369,18 @@ def minutaria_cli(default_timer: str):
         # Modify the corresponding preset and quit
         try:
             preset_to_modify = Preset()
-            modified = preset_to_modify.modify_preset_duration(args.modify_preset_duration,
-                                                              timer_values["timer_hours"],
-                                                              timer_values["timer_min"],
-                                                              timer_values["timer_secs"])
-            modified_preset_duration = timedelta(hours =+ timer_values["timer_hours"],
-                                                 minutes =+ timer_values["timer_min"],
-                                                 seconds =+ timer_values["timer_secs"])
+            modified = preset_to_modify.set_duration(args.modify_preset_duration,
+                                                     timer_values["timer_hours"],
+                                                     timer_values["timer_min"],
+                                                     timer_values["timer_secs"])
+            modified_duration = timedelta(hours =+ timer_values["timer_hours"],
+                                          minutes =+ timer_values["timer_min"],
+                                          seconds =+ timer_values["timer_secs"])
 
             if modified:
                 print("New preset duration: "
                       f"{args.modify_preset_duration.capitalize()}"
-                      f" - {str(modified_preset_duration)}")
+                      f" - {str(modified_duration)}")
                 exit()
         except ValueError:
             print(f"The preset {args.modify_preset_duration.capitalize()} "
@@ -393,8 +396,8 @@ def minutaria_cli(default_timer: str):
         # Rename the corresponding preset and quit
         try:
             preset_to_rename = Preset()
-            renamed = preset_to_rename.rename_preset(args.rename_preset[0],
-                                                    args.rename_preset[1])
+            renamed = preset_to_rename.rename(args.rename_preset[0],
+                                              args.rename_preset[1])
             if renamed:
                 print(f"Preset {args.rename_preset[0].capitalize()} renamed: "
                       f"{args.rename_preset[1].capitalize()}")
@@ -414,7 +417,7 @@ def minutaria_cli(default_timer: str):
         # Delete the corresponding preset and quit
         try:
             preset_to_delete = Preset()
-            deleted = preset_to_delete.delete_preset(args.del_preset)
+            deleted = preset_to_delete.delete(args.del_preset)
             if deleted:
                 print(f"Preset deleted: {args.del_preset.capitalize()}")
                 exit()
@@ -431,7 +434,7 @@ def minutaria_cli(default_timer: str):
         try:
             # Use the corresponding preset
             preset_to_get = Preset()
-            preset_to_use = preset_to_get.get_preset(args.use_preset)
+            preset_to_use = preset_to_get.get(args.use_preset)
 
             # Check wether the preset does exist
             if preset_to_use:
