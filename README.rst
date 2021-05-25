@@ -49,7 +49,7 @@ Use
 
 libminutaria.py module contains is fully usable via command line. Execute a default timer if launched without argument. Use -h/--help arguments for more information.
 
-minutaria_curses.py contains the basic ncurses interface and so shall be launched via command line. It offers a start/relaunch/quit functionality and is fully usable with CLI arguments identically to libminutaria.py.
+minutaria_curses.py contains the basic ncurses interface and so shall be launched via command line. It offers a start/relaunch/quit functionality and is fully usable with CLI arguments identically to libminutaria.py. This user interface shall only be use on Unix system as the Windows version isn't included in the standard library, nervertheless it should be usable with WSL (not tested).
 
 License
 -------
