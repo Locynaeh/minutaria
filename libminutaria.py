@@ -95,7 +95,8 @@ class Preset:
                     json.dump(json_data, preset_file_write, indent=4)
 
             return preset_dict_to_append
-        raise ValueError("ValueError: already existing preset")
+        else:
+            raise ValueError("ValueError: already existing preset")
 
     def get_preset(self, name: str):
         """
@@ -133,6 +134,7 @@ class Preset:
         delete the preset from the preset.json file and return True.
         """
         # Check wether the preset exist
+        # If not raise the corresponding exception
         try:
             self.get_preset(name)
         except ValueError as exception:
@@ -186,7 +188,8 @@ class Preset:
                             # Append the modified json object
                             json.dump(json_data, preset_file_write, indent=4)
                         return True
-        raise ValueError("ValueError: already existing preset")
+        else:
+            raise ValueError("ValueError: already existing preset")
     def modify_preset_duration(self, name: str, hours: int, minutes: int, seconds: int):
         """
         Check wether the choosen name does exist, if not raise an exception, if
@@ -286,15 +289,15 @@ def minutaria_cli(default_timer: str):
 
     # Accepted ranges error management
     if args.hours and args.hours not in range(0, 24):
-        print("minutaria: ValueError: argument -H/--hours: invalid choice:"
+        print("minutaria: Error: argument -H/--hours: invalid choice:"
               f" {args.hours} (choose from 0 to 23)")
         exit()
     if args.minutes and args.minutes not in range(0, 60):
-        print(f"minutaria: ValueError: argument -M/--minutes: invalid choice:"
+        print(f"minutaria: Error: argument -M/--minutes: invalid choice:"
               f" {args.minutes} (choose from 0 to 59)")
         exit()
     if (args.seconds or args.seconds == 0) and args.seconds not in range(1, 60):
-        print(f"minutaria: argument -S/--seconds: invalid choice:"
+        print(f"minutaria: Error: argument -S/--seconds: invalid choice:"
               f" {args.seconds} (choose from 1 to 59)")
         exit()
 
