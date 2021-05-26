@@ -57,7 +57,11 @@ class Timer:
 
 class Preset:
     """A preset timer manager for the Timer class"""
-    def __init__(self):
+    def __init__(self, name: str, hours: int = 0, minutes: int = 0, seconds: int = 0):
+        self._name = name.lower()
+        self._hours = hours
+        self._minutes = minutes
+        self._seconds = seconds
         # If the preset file doesn't exist, create it
         try:
             with open('preset.json', 'r') as preset_file_read:
@@ -65,7 +69,7 @@ class Preset:
         except FileNotFoundError:
             with open('preset.json', 'w') as preset_file_write:
                 json.dump([], preset_file_write, indent=4)
-    def add(self, name: str, hours: int = 0, minutes: int = 0, seconds: int = 0):
+    def add(self):
         """
         Check wether the choosen name does exist, if not create the preset and
         write it in the preset.json file and return the json object added as a
@@ -74,17 +78,13 @@ class Preset:
         # Create a data set to be inclued, preset name is lowercased
         # Check wether the name already exist
         try:
-            self.get(name)
+            self.get()
         except ValueError:
-            self.preset_name = name.lower()
-            self.hours = hours
-            self.min = minutes
-            self.secs = seconds
             # Prepare the set in a dict to be added as a json object
-            preset_dict_to_append = {"name": self.preset_name,
-                                     "duration": {"hours": self.hours,
-                                                  "min": self.min,
-                                                  "secs": self.secs
+            preset_dict_to_append = {"name": self._name,
+                                     "duration": {"hours": self._hours,
+                                                  "min": self._minutes,
+                                                  "secs": self._seconds
                                                   }
                                      }
             # Open the json preset file to add the new preset
@@ -100,13 +100,11 @@ class Preset:
         else:
             raise ValueError("ValueError: already existing preset")
 
-    def get(self, name: str):
+    def get(self):
         """
         Check wether the preset name does exist, if not raise an exception, if
         yes return a dict containing timer values.
         """
-        # Preset name is lowercased to be searched
-        self.preset_name = name.lower()
         self.timer_values = {"hours": None,
                             "minutes": None,
                             "seconds": None}
@@ -117,7 +115,7 @@ class Preset:
             json_data = json.load(preset_file_read)
             for preset in json_data:
                 # Search if the preset does exist
-                if preset["name"] == self.preset_name:
+                if preset["name"] == self._name:
                     # Get the preset's timing
                     self.timer_values["hours"] = preset["duration"]["hours"]
                     self.timer_values["minutes"] = preset["duration"]["min"]
@@ -130,7 +128,7 @@ class Preset:
 
         return self.timer_values
 
-    def delete(self, name: str) -> bool:
+    def delete(self) -> bool:
         """
         Check wether the preset name does exist, if not return None, if yes
         delete the preset from the preset.json file and return True.
@@ -138,11 +136,9 @@ class Preset:
         # Check wether the preset exist
         # If not raise the corresponding exception
         try:
-            self.get(name)
+            self.get()
         except ValueError as exception:
             raise exception
-        # Preset name is lowercased to be searched
-        self.preset_name = name.lower()
 
         # Open the json preset file to search for the existing preset to delete
         with open('preset.json', 'r') as preset_file_read:
@@ -150,7 +146,7 @@ class Preset:
             json_data = json.load(preset_file_read)
             for preset in json_data:
                 # Search for the preset to delete
-                if preset["name"] == self.preset_name:
+                if preset["name"] == self._name:
                     # Delete the preset
                     json_data.remove(preset)
                     with open('preset.json', 'w') as preset_file_write:
@@ -158,7 +154,7 @@ class Preset:
                         json.dump(json_data, preset_file_write, indent=4)
                     return True
 
-    def rename(self, old_name: str, new_name: str) -> bool:
+    def rename(self, new_name: str) -> bool:
         """
         Check wether the preset name to change does exist, if not raise an
         exception. Check wether the new preset name does exist, if not rename
@@ -167,32 +163,29 @@ class Preset:
         """
         # Check wether the preset exist and if the new name is available
         try:
-            self.get(old_name)
+            self.get()
         except ValueError as exception:
             raise exception
         try:
-            self.get(new_name)
+            self.new_name = Preset(name = new_name)
+            self.new_name.get()
         except ValueError:
-            # Preset name is lowercased to be searched
-            self.old_preset_name = old_name.lower()
-            self.new_preset_name = new_name.lower()
-
-            # Open the json preset file to search for the existing preset to rename
+            # Open the json preset file to search for the preset to rename
             with open('preset.json', 'r') as preset_file_read:
                 # Load json presets to be modified
                 json_data = json.load(preset_file_read)
                 for preset in json_data:
                     # Search for the preset name
-                    if preset["name"] == self.old_preset_name:
+                    if preset["name"] == self._name:
                         # Rename it if found
-                        preset["name"] = self.new_preset_name
+                        preset["name"] = new_name.lower()
                         with open('preset.json', 'w') as preset_file_write:
                             # Append the modified json object
                             json.dump(json_data, preset_file_write, indent=4)
                         return True
         else:
             raise ValueError("ValueError: already existing preset")
-    def set_duration(self, name: str, hours: int, minutes: int, seconds: int) -> bool:
+    def set_duration(self, hours: int, minutes: int, seconds: int) -> bool:
         """
         Check wether the choosen name does exist, if not raise an exception, if
         yes update the preset duration according to parameters, write it in the
@@ -200,14 +193,13 @@ class Preset:
         """
         # Check wether the preset exist
         try:
-            self.get(name)
+            self.get()
         except ValueError as exception:
             raise exception
-        # Preset name is lowercased to be searched
-        self.preset_name = name.lower()
-        self.hours = hours
-        self.min = minutes
-        self.secs = seconds
+
+        self._hours = hours
+        self._minutes = minutes
+        self._seconds = seconds
 
         # Open the json preset file to search for the preset to modify
         with open('preset.json', 'r') as preset_file_read:
@@ -215,11 +207,11 @@ class Preset:
             json_data = json.load(preset_file_read)
             for preset in json_data:
                 # Search for the preset name
-                if preset["name"] == self.preset_name:
+                if preset["name"] == self._name:
                     # Get the preset's timing
-                    preset["duration"]["hours"] = self.hours
-                    preset["duration"]["min"] = self.min
-                    preset["duration"]["secs"] = self.secs
+                    preset["duration"]["hours"] = self._hours
+                    preset["duration"]["min"] = self._minutes
+                    preset["duration"]["secs"] = self._seconds
                     with open('preset.json', 'w') as preset_file_write:
                         # Append the modified json object
                         json.dump(json_data, preset_file_write, indent=4)
@@ -337,13 +329,13 @@ def minutaria_cli(default_timer: str):
         exit()
     elif args.add_preset:
         # Create the corresponding preset and quit
-        new_preset = Preset()
+        new_preset = Preset(args.add_preset,
+                            timer_values["timer_hours"],
+                            timer_values["timer_min"],
+                            timer_values["timer_secs"])
 
         try:
-            new_preset.add(args.add_preset,
-                           timer_values["timer_hours"],
-                           timer_values["timer_min"],
-                           timer_values["timer_secs"])
+            new_preset.add()
             new_preset_duration = timedelta(hours =+ timer_values["timer_hours"],
                                             minutes =+ timer_values["timer_min"],
                                             seconds =+ timer_values["timer_secs"])
@@ -368,9 +360,8 @@ def minutaria_cli(default_timer: str):
     elif args.modify_preset_duration:
         # Modify the corresponding preset and quit
         try:
-            preset_to_modify = Preset()
-            modified = preset_to_modify.set_duration(args.modify_preset_duration,
-                                                     timer_values["timer_hours"],
+            preset_to_modify = Preset(args.modify_preset_duration)
+            modified = preset_to_modify.set_duration(timer_values["timer_hours"],
                                                      timer_values["timer_min"],
                                                      timer_values["timer_secs"])
             modified_duration = timedelta(hours =+ timer_values["timer_hours"],
@@ -395,9 +386,9 @@ def minutaria_cli(default_timer: str):
     elif args.rename_preset:
         # Rename the corresponding preset and quit
         try:
-            preset_to_rename = Preset()
-            renamed = preset_to_rename.rename(args.rename_preset[0],
-                                              args.rename_preset[1])
+            preset_to_rename = Preset(args.rename_preset[0])
+            renamed = preset_to_rename.rename(args.rename_preset[1])
+
             if renamed:
                 print(f"Preset {args.rename_preset[0].capitalize()} renamed: "
                       f"{args.rename_preset[1].capitalize()}")
@@ -416,8 +407,9 @@ def minutaria_cli(default_timer: str):
     elif args.del_preset:
         # Delete the corresponding preset and quit
         try:
-            preset_to_delete = Preset()
-            deleted = preset_to_delete.delete(args.del_preset)
+            preset_to_delete = Preset(args.del_preset)
+            deleted = preset_to_delete.delete()
+
             if deleted:
                 print(f"Preset deleted: {args.del_preset.capitalize()}")
                 exit()
@@ -433,8 +425,8 @@ def minutaria_cli(default_timer: str):
     elif args.use_preset:
         try:
             # Use the corresponding preset
-            preset_to_get = Preset()
-            preset_to_use = preset_to_get.get(args.use_preset)
+            preset_to_get = Preset(args.use_preset)
+            preset_to_use = preset_to_get.get()
 
             # Check wether the preset does exist
             if preset_to_use:
