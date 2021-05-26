@@ -17,7 +17,7 @@ Done
 - Use OOP approach
 - Use *datetime* module
 - Display time ISO 8601 format like as hh:mm:ss.n
-- Use *argparse* module to built the CLI utility
+- Use *argparse* module to build the CLI utility
 - Manage presets and use *json* module to store them
 - ncurses interface via *curses* Python standard module with basic start/relaunch/quit command also usable with the lib's CLI
 - Gradually introduce type hints
