@@ -9,9 +9,26 @@
 import libminutaria
 import curses # see https://docs.python.org/fr/3.7/howto/curses.html
 from datetime import timedelta
+from sys import exit
+from os import name
 
 # Duration between flashes at the end of the timer
 FLASH_PERIOD = 1000
+
+# Check if not on Windows platform
+WINDOWS_CHECK = True
+
+if WINDOWS_CHECK:
+    try:
+        assert ("posix" in name), "May not be able to run correctly on "\
+                                  "non Posix systems."
+    except AssertionError as error:
+        print(error)
+        print("The program was stopped."
+              "Set WINDOWS_CHECK value to False to disable the check.")
+        exit()
+        
+
 
 def main(stdscr):
     # Withdraw cursor visiblity for aesthetic reasons
