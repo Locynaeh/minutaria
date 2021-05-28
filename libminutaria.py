@@ -1,9 +1,23 @@
 #! /usr/bin/python3
 # -*-coding:Utf-8 -*
 
-# libminutaria
-# Provide a library allowing to create timers, presets managed by a JSON file
-# and an integrable CLI to manage both.
+"""
+libminutaria
+============
+
+:Authors:
+    Locynaeh
+:Version:
+    1.0
+
+Provide a library allowing to create timers and presets managed by a JSON file
+and an integrable CLI to manage both.
+
+This script is directly usable in a terminal. Use -h/--help arguments for more
+information on how to use the CLI provided.
+
+This file can also be imported as a module.
+"""
 
 from datetime import datetime, timedelta
 from sys import exit
@@ -12,11 +26,29 @@ import json
 
 class Timer:
     """
-    Simple timer printing as HH:MM:SS.
+    Simple timer printing as HH:MM:SS
+    =================================
+    
     Allow to launch a given timer, check remaining time before 00:00:00, check
-    wether timing is reached and get the current timing allong the process.
+    wether timing is reached and get the current timing along the process
+
+    Attributes
+    ----------
+
+    base: datetime
+        The time at timer launch to be kept as a comparison base to
+        calculate the time passed
+    actualization: datetime
+        The current time to be updated along the timer
+    delta: timedelta
+        The timer duration
+    actualized_delta: timedelta
+        The actualized duration according to time passed to be updated along
+        the timer
     """
+    
     def __init__(self, hours: int = 0, minutes: int = 0, seconds: int = 0):
+        """Launch a given timer"""
         self._base = datetime.now()
         self._actualization = datetime(self._base.year,
                                        self._base.month,
@@ -31,14 +63,14 @@ class Timer:
         self._actualized_delta = timedelta(hours=+hours,
                                            minutes=+minutes,
                                            seconds=+seconds)
-    def _convert_delta_to_datetime(self):
+    def _convert_delta_to_datetime(self) -> datetime:
         """
-        Convert the timedelta object to a datetime object allowing arithmetic
-        on it
+        Convert the base timedelta object to a datetime object allowing
+        arithmetic on it
         """
         return self._base + self._delta
 
-    def _rebase_current_time(self):
+    def _rebase_current_time(self) -> None:
         """Actualize timing according to current time"""
         self._actualization = datetime.now()
         self._actualized_delta = (self._convert_delta_to_datetime()
@@ -56,8 +88,29 @@ class Timer:
         return str(self._actualized_delta)
 
 class Preset:
-    """A preset timer manager for the Timer class"""
+    """
+    A preset timer manager for the Timer class
+    ==========================================
+
+    Initialize a virtual timer which could be add as a preset to a dedicated
+    preset management JSON file if it does not exist, modified if it does
+    exist in this same file (name or duration), delete or get to be use as
+    a timer.
+
+    Attributes
+    ----------
+    
+    name: str
+        The name of the timer preset
+    hours: int
+        The hours quantity of the timer preset
+    minutes: int
+        The minutes quantity of the timer preset
+    seconds: int
+        The seconds quantity of the timer preset
+    """
     def __init__(self, name: str, hours: int = 0, minutes: int = 0, seconds: int = 0):
+        """Initialize a virtual preset"""
         self._name = name.lower()
         self._hours = hours
         self._minutes = minutes
@@ -69,7 +122,7 @@ class Preset:
         except FileNotFoundError:
             with open('preset.json', 'w') as preset_file_write:
                 json.dump([], preset_file_write, indent=4)
-    def add(self):
+    def add(self) -> dict:
         """
         Check wether the choosen name does exist, if not create the preset and
         write it in the preset.json file and return the json object added as a
@@ -100,7 +153,7 @@ class Preset:
         else:
             raise ValueError("ValueError: already existing preset")
 
-    def get(self):
+    def get(self) -> dict:
         """
         Check wether the preset name does exist, if not raise an exception, if
         yes return a dict containing timer values.
@@ -217,7 +270,7 @@ class Preset:
                         json.dump(json_data, preset_file_write, indent=4)
                     return True
 
-def minutaria_cli(default_timer: str):
+def minutaria_cli(default_timer: str) -> dict:
     """
     CLI for minutaria supporting choosing timer duration by hours, minutes
     and seconds separately and managing preset : add, delete, rename, change
@@ -319,7 +372,7 @@ def minutaria_cli(default_timer: str):
         else:
             timer_values["timer_secs"] = args.seconds
 
-    # Check whether the user input a timer with the name of the preset to create
+    # Check whether the user input a timer with the name of the preset to add
     if args.add_preset and (not args.hours
                             and not args.minutes
                             and not args.seconds):

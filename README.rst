@@ -21,6 +21,7 @@ Done
 - Manage presets and use *json* module to store them
 - ncurses interface via *curses* Python standard module with basic start/relaunch/quit command also usable with the lib's CLI
 - Gradually introduce type hints
+- Minimal documentation
 
 Expected
 --------
@@ -33,7 +34,6 @@ Expected
     - alarm volume
     - play a sound at 00:00:00.0
 - Pythonic code (idiomatic style, PEP8...)
-- Type checking
 - Unit tests
 
 Dependencies
