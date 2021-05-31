@@ -41,8 +41,8 @@ Dependencies
 
 Nothing except Python 3 and modules from the standard library, currently :
 
-- *datetime*, *argparse*, *sys* and *json* for the lib
-- *curses*, *datetime*, *sys* and *os* for the ncurses interface.
+- *datetime*, *argparse* and *json* for the lib
+- *curses*, *datetime* and *os* for the ncurses interface.
 
 Use
 ---

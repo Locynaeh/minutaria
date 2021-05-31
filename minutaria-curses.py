@@ -33,7 +33,6 @@ main
 import libminutaria
 import curses  # see https://docs.python.org/fr/3.7/howto/curses.html
 from datetime import timedelta
-from sys import exit
 from os import name
 
 # Duration between flashes at the end of the timer

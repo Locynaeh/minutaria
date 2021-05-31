@@ -33,7 +33,6 @@ minutaria_cli
 """
 
 from datetime import datetime, timedelta
-from sys import exit
 import argparse
 import json
 
