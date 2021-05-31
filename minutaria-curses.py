@@ -46,11 +46,27 @@ if WINDOWS_CHECK:
         print("The program was stopped."
               "Set WINDOWS_CHECK value to False to disable the check.")
         exit()
-        
-
 
 def main(stdscr):
-    """ncurses main loop"""
+    """
+    ncurses main loop
+    =================
+
+    Create a dedicated ncurses windows to launch a libminutaria.py's Timer
+    with start/relaunch/quit utility all along.
+
+    First an initial screen displays the initial timing and gives the user
+    the launch or quit choice.
+
+    Then, if launch is choosen, then the timer is launched and the user has the
+    choice to relaunch (reset the timer and return to the first screen) or
+    quit all along.
+
+    Finally, at the end of the timer, a GONG is displayed 3 times with
+    configurable flashes. Again the same relaunch/quit choice is given to
+    the user.
+    """
+
     # Withdraw cursor visiblity for aesthetic reasons
     curses.curs_set(False)
     # Block I/O calls for the base screen
@@ -156,5 +172,5 @@ if __name__ == '__main__':
                                minutes=TIMER_MIN,
                                seconds=TIMER_SEC)
 
-    # Launch the curses main loop
+    # Launch the curses main loop in a ncurses wrapper to manage cleaning
     curses.wrapper(main)
