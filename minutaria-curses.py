@@ -1,10 +1,29 @@
 #! /usr/bin/python3
 # -*-coding:Utf-8 -*
 
-# minutaria ncurses interface:
-# basic ncurses interface based on the Python's curses standard library
-# Give the user  a start/quit command at the beginning
-# and the choice to relaunch the same timer or quit anytime
+"""
+minutaria ncurses interface
+===========================
+
+:Authors:
+    Locynaeh
+:Version:
+    1.0
+
+Basic ncurses interface based on the Python's curses standard library
+
+Give the user  a start/quit command at the beginning and the choice to
+relaunch the same timer or quit anytime
+Add a configurable flash system at the end of the timer
+
+The TUI is fully usable with CLI arguments thanks to libminutaria.py.
+Use -h/--help arguments for more information.
+
+This user interface shall only be use on Unix system as the Windows version
+isn't included in the standard library, this script contains a WINDOWS_CHECK
+parameter for this purpose.
+Nervertheless it should be usable with WSL (not tested).
+"""
 
 import libminutaria
 import curses # see https://docs.python.org/fr/3.7/howto/curses.html
@@ -31,6 +50,7 @@ if WINDOWS_CHECK:
 
 
 def main(stdscr):
+    """ncurses main loop"""
     # Withdraw cursor visiblity for aesthetic reasons
     curses.curs_set(False)
     # Block I/O calls for the base screen
