@@ -30,10 +30,10 @@ main
     A main loop to display a ncurses TUI to a libminutaria.py timer.
 """
 
-import libminutaria
+from os import name
 import curses  # see https://docs.python.org/fr/3.7/howto/curses.html
 from datetime import timedelta
-from os import name
+import libminutaria
 
 # Duration between flashes at the end of the timer
 FLASH_PERIOD = 1000
@@ -130,8 +130,8 @@ def main(stdscr):
             timer_window.refresh()
             timer_window.addstr(0, 0, "minutaria", curses.A_STANDOUT)
             timer_window.refresh()
-            for x in range(1, 4):
-                timer_window.addstr(2, 0, "GONG ! " * x)
+            for space in range(1, 4):
+                timer_window.addstr(2, 0, "GONG ! " * space)
                 timer_window.refresh()
                 curses.flash()
                 curses.napms(FLASH_PERIOD)
