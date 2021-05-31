@@ -23,6 +23,11 @@ This user interface shall only be use on Unix system as the Windows version
 isn't included in the standard library, this script contains a WINDOWS_CHECK
 parameter for this purpose.
 Nervertheless it should be usable with WSL (not tested).
+
+Functions
+---------
+main
+    A main loop to display a ncurses TUI to a libminutaria.py timer.
 """
 
 import libminutaria
