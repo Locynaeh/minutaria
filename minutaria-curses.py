@@ -31,7 +31,7 @@ main
 """
 
 import libminutaria
-import curses # see https://docs.python.org/fr/3.7/howto/curses.html
+import curses  # see https://docs.python.org/fr/3.7/howto/curses.html
 from datetime import timedelta
 from sys import exit
 from os import name
@@ -51,6 +51,7 @@ if WINDOWS_CHECK:
         print("The program was stopped."
               "Set WINDOWS_CHECK value to False to disable the check.")
         exit()
+
 
 def main(stdscr):
     """
@@ -106,7 +107,7 @@ def main(stdscr):
         counter = timer.is_timing_reached()
 
         # Launch the timer and print the remaining time
-        while counter == False:
+        while counter is False:
             timer_window.addstr(0, 0, "minutaria", curses.A_STANDOUT)
             timer_window.addstr(2, 0, "Remaining : " + timer.get_timing[:9])
             timer_window.addstr(4, 0, "Press r to relaunch or q to quit...")
@@ -136,7 +137,7 @@ def main(stdscr):
                 curses.flash()
                 curses.napms(FLASH_PERIOD)
 
-        # Give the user the choice to relaunch the timer or quit
+        # Give the user the choice to relaunch the timer or quit
         endloop = True
         while endloop:
             timer_window.addstr(4, 0, "Press r to relaunch or q to quit...")
@@ -148,17 +149,18 @@ def main(stdscr):
                 mainloop = False
                 break
 
+
 if __name__ == '__main__':
     # Default parameters to be use if the script is launched without argument
     # or modified by user input
-    TIMER_HOURS = 0 # min 0, max 23
-    TIMER_MIN = 0   # min 0, max 59
-    TIMER_SEC = 5   # min 0, max 59
+    TIMER_HOURS = 0  # min 0, max 23
+    TIMER_MIN = 0    # min 0, max 59
+    TIMER_SEC = 5    # min 0, max 59
 
-    #Printable default script duration
-    default_duration = timedelta(hours =+ TIMER_HOURS,
-                                 minutes =+ TIMER_MIN,
-                                 seconds =+ TIMER_SEC)
+    # Printable default script duration
+    default_duration = timedelta(hours=+TIMER_HOURS,
+                                 minutes=+TIMER_MIN,
+                                 seconds=+TIMER_SEC)
     DEFAULT = str(default_duration)
 
     # Launch CLI and get timer values if user input
@@ -166,11 +168,11 @@ if __name__ == '__main__':
 
     # Update timer parameters if modified by CLI
     if (timer_values["timer_hours"]
-        or timer_values["timer_min"]
-        or timer_values["timer_secs"]):
-            TIMER_HOURS = timer_values["timer_hours"]
-            TIMER_MIN = timer_values["timer_min"]
-            TIMER_SEC = timer_values["timer_secs"]
+            or timer_values["timer_min"]
+            or timer_values["timer_secs"]):
+        TIMER_HOURS = timer_values["timer_hours"]
+        TIMER_MIN = timer_values["timer_min"]
+        TIMER_SEC = timer_values["timer_secs"]
 
     # Keep a timestamp of the final initial timing choosen after CLI use
     initial_timing = timedelta(hours=TIMER_HOURS,

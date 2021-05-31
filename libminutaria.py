@@ -37,6 +37,7 @@ from sys import exit
 import argparse
 import json
 
+
 class Timer:
     """
     Simple timer printing as HH:MM:SS.n
@@ -96,6 +97,7 @@ class Timer:
         self._actualized_delta = timedelta(hours=+hours,
                                            minutes=+minutes,
                                            seconds=+seconds)
+
     def _convert_delta_to_datetime(self) -> datetime:
         """
         Convert the base timedelta object to a datetime object allowing
@@ -119,6 +121,7 @@ class Timer:
     def get_timing(self) -> str:
         """Return the actual remaining time to reach 00:00:00 as a string."""
         return str(self._actualized_delta)
+
 
 class Preset:
     """
@@ -177,11 +180,12 @@ class Preset:
         self._seconds = seconds
         # If the preset file doesn't exist, create it
         try:
-            with open('preset.json', 'r') as preset_file_read:
+            with open('preset.json', 'r'):
                 pass
         except FileNotFoundError:
             with open('preset.json', 'w') as preset_file_write:
                 json.dump([], preset_file_write, indent=4)
+
     def add(self) -> dict:
         """
         Check wether the choosen name does exist, if not create the preset and
@@ -211,7 +215,7 @@ class Preset:
                 # Load json presets to be modified
                 json_data = json.load(preset_file_read)
                 with open('preset.json', 'w') as preset_file_write:
-                    # Append the new json object
+                    # Append the new json object
                     json_data.append(preset_dict_to_append)
                     json.dump(json_data, preset_file_write, indent=4)
 
@@ -231,8 +235,8 @@ class Preset:
         """
 
         self.timer_values = {"hours": None,
-                            "minutes": None,
-                            "seconds": None}
+                             "minutes": None,
+                             "seconds": None}
 
         # Open the json preset file to search for the existing preset
         with open('preset.json', 'r') as preset_file_read:
@@ -247,9 +251,9 @@ class Preset:
                     self.timer_values["seconds"] = preset["duration"]["secs"]
 
         if (self.timer_values["hours"] or
-            self.timer_values["minutes"] or
-            self.timer_values["seconds"]) is None:
-               raise ValueError("ValueError: Preset not found")
+                self.timer_values["minutes"] or
+                self.timer_values["seconds"]) is None:
+            raise ValueError("ValueError: Preset not found")
 
         return self.timer_values
 
@@ -281,7 +285,7 @@ class Preset:
                     # Delete the preset
                     json_data.remove(preset)
                     with open('preset.json', 'w') as preset_file_write:
-                        # Append the modified json object
+                        # Append the modified json object
                         json.dump(json_data, preset_file_write, indent=4)
                     return True
 
@@ -309,7 +313,7 @@ class Preset:
         except ValueError as exception:
             raise exception
         try:
-            self.new_name = Preset(name = new_name)
+            self.new_name = Preset(name=new_name)
             self.new_name.get()
         except ValueError:
             # Open the json preset file to search for the preset to rename
@@ -322,7 +326,7 @@ class Preset:
                         # Rename it if found
                         preset["name"] = new_name.lower()
                         with open('preset.json', 'w') as preset_file_write:
-                            # Append the modified json object
+                            # Append the modified json object
                             json.dump(json_data, preset_file_write, indent=4)
                         return True
         else:
@@ -371,9 +375,10 @@ class Preset:
                     preset["duration"]["min"] = self._minutes
                     preset["duration"]["secs"] = self._seconds
                     with open('preset.json', 'w') as preset_file_write:
-                        # Append the modified json object
+                        # Append the modified json object
                         json.dump(json_data, preset_file_write, indent=4)
                     return True
+
 
 def minutaria_cli(default_timer: str) -> dict:
     """
@@ -391,7 +396,8 @@ def minutaria_cli(default_timer: str) -> dict:
     """
     parser = argparse.ArgumentParser(prog="minutaria",
                                      description="Execute a given timer from "
-                                                 "min 00:00:01 to max 23:59:59."
+                                                 "min 00:00:01 to "
+                                                 "max 23:59:59."
                                                  " Options -ap and -mpd shall "
                                                  "be used with duration "
                                                  "parameters.",
@@ -400,9 +406,9 @@ def minutaria_cli(default_timer: str) -> dict:
                                             f"{default_timer}.")
     group = parser.add_mutually_exclusive_group()
     parser.add_argument("-v",
-                    "--version",
-                    action="version",
-                    version="%(prog)s 1.0")
+                        "--version",
+                        action="version",
+                        version="%(prog)s 1.0")
     parser.add_argument("-H",
                         "--hours",
                         type=int,
@@ -419,31 +425,31 @@ def minutaria_cli(default_timer: str) -> dict:
                         action="store",
                         help="Second(s) to time")
     group.add_argument("-ap",
-                        "--add_preset",
-                        action="store",
-                        metavar="PRESET_NAME",
-                        help="Name of the timer preset to create")
+                       "--add_preset",
+                       action="store",
+                       metavar="PRESET_NAME",
+                       help="Name of the timer preset to create")
     group.add_argument("-p",
-                        "--use_preset",
-                        action="store",
-                        metavar="PRESET_NAME",
-                        help="Name of the timer preset to use")
+                       "--use_preset",
+                       action="store",
+                       metavar="PRESET_NAME",
+                       help="Name of the timer preset to use")
     group.add_argument("-rp",
-                        "--rename_preset",
-                        action="store",
-                        nargs=2,
-                        metavar=("OLD_NAME","NEW_NAME"),
-                        help="Names of the timer preset to rename and the new")
+                       "--rename_preset",
+                       action="store",
+                       nargs=2,
+                       metavar=("OLD_NAME", "NEW_NAME"),
+                       help="Names of the timer preset to rename and the new")
     group.add_argument("-mpd",
-                        "--modify_preset_duration",
-                        action="store",
-                        metavar="PRESET_NAME",
-                        help="Name of the timer preset to modify")
+                       "--modify_preset_duration",
+                       action="store",
+                       metavar="PRESET_NAME",
+                       help="Name of the timer preset to modify")
     group.add_argument("-dp",
-                        "--del_preset",
-                        action="store",
-                        metavar="PRESET_NAME",
-                        help="Name of the timer preset to delete")
+                       "--del_preset",
+                       action="store",
+                       metavar="PRESET_NAME",
+                       help="Name of the timer preset to delete")
 
     args = parser.parse_args()
 
@@ -470,17 +476,17 @@ def minutaria_cli(default_timer: str) -> dict:
 
     # Actualize timing global variables if at list one CLI argument is used
     if args.hours or args.minutes or args.seconds:
-        if args.hours == None:
+        if args.hours is None:
             timer_values["timer_hours"] = 0
         else:
             timer_values["timer_hours"] = args.hours
 
-        if args.minutes == None:
+        if args.minutes is None:
             timer_values["timer_min"] = 0
         else:
             timer_values["timer_min"] = args.minutes
 
-        if args.seconds == None:
+        if args.seconds is None:
             timer_values["timer_secs"] = 0
         else:
             timer_values["timer_secs"] = args.seconds
@@ -502,9 +508,9 @@ def minutaria_cli(default_timer: str) -> dict:
 
         try:
             new_preset.add()
-            new_preset_duration = timedelta(hours =+ timer_values["timer_hours"],
-                                            minutes =+ timer_values["timer_min"],
-                                            seconds =+ timer_values["timer_secs"])
+            new_preset_duration = timedelta(hours=+timer_values["timer_hours"],
+                                            minutes=+timer_values["timer_min"],
+                                            seconds=+timer_values["timer_secs"])
             print("New preset added: "
                   f"{args.add_preset.capitalize()} - "
                   f"{str(new_preset_duration)}")
@@ -514,7 +520,8 @@ def minutaria_cli(default_timer: str) -> dict:
                   f"already exist. Please choose an other name.")
             exit()
 
-    # Check whether the user input a timer with the name of the preset to modify
+    # Check whether the user input a timer with the name of
+    # the preset to modify
     if args.modify_preset_duration and (not args.hours
                                         and not args.minutes
                                         and not args.seconds):
@@ -530,9 +537,9 @@ def minutaria_cli(default_timer: str) -> dict:
             modified = preset_to_modify.set_duration(timer_values["timer_hours"],
                                                      timer_values["timer_min"],
                                                      timer_values["timer_secs"])
-            modified_duration = timedelta(hours =+ timer_values["timer_hours"],
-                                          minutes =+ timer_values["timer_min"],
-                                          seconds =+ timer_values["timer_secs"])
+            modified_duration = timedelta(hours=+timer_values["timer_hours"],
+                                          minutes=+timer_values["timer_min"],
+                                          seconds=+timer_values["timer_secs"])
 
             if modified:
                 print("New preset duration: "
@@ -541,7 +548,7 @@ def minutaria_cli(default_timer: str) -> dict:
                 exit()
         except ValueError:
             print(f"The preset {args.modify_preset_duration.capitalize()} "
-                 "does not exist. Please choose an existing name.")
+                  "does not exist. Please choose an existing name.")
             exit()
 
     # Check whether the preset to rename is the only user input
@@ -561,8 +568,8 @@ def minutaria_cli(default_timer: str) -> dict:
                 exit()
         except ValueError:
             print(f"The preset {args.rename_preset[0].capitalize()} "
-                 f"does not exist or the new name "
-                 f"{args.rename_preset[1].capitalize()} is not available.")
+                  f"does not exist or the new name "
+                  f"{args.rename_preset[1].capitalize()} is not available.")
             exit()
 
     # Check whether the preset to delete is the only user input
@@ -601,22 +608,23 @@ def minutaria_cli(default_timer: str) -> dict:
                 timer_values["timer_secs"] = preset_to_use["seconds"]
         except ValueError:
             print(f"The preset {args.use_preset.capitalize()} "
-                 "does not exist. Please choose an existing preset.")
+                  "does not exist. Please choose an existing preset.")
             exit()
 
     return timer_values
 
+
 if __name__ == '__main__':
     # Default parameters to be use if the script is launched without argument
     # or modified by user input
-    TIMER_HOURS = 0 # min 0, max 23
-    TIMER_MIN = 0   # min 0, max 59
-    TIMER_SEC = 5   # min 0, max 59
+    TIMER_HOURS = 0  # min 0, max 23
+    TIMER_MIN = 0    # min 0, max 59
+    TIMER_SEC = 5    # min 0, max 59
 
-    #Printable default duration
-    default_duration = timedelta(hours =+ TIMER_HOURS,
-                                 minutes =+ TIMER_MIN,
-                                 seconds =+ TIMER_SEC)
+    # Printable default duration
+    default_duration = timedelta(hours=+TIMER_HOURS,
+                                 minutes=+TIMER_MIN,
+                                 seconds=+TIMER_SEC)
     DEFAULT = str(default_duration)
 
     # Launch CLI and get timer values if user input
@@ -624,20 +632,18 @@ if __name__ == '__main__':
 
     # Update timer parameters if modified by CLI
     if (timer_values["timer_hours"]
-        or timer_values["timer_min"]
-        or timer_values["timer_secs"]):
-            TIMER_HOURS = timer_values["timer_hours"]
-            TIMER_MIN = timer_values["timer_min"]
-            TIMER_SEC = timer_values["timer_secs"]
+            or timer_values["timer_min"]
+            or timer_values["timer_secs"]):
+        TIMER_HOURS = timer_values["timer_hours"]
+        TIMER_MIN = timer_values["timer_min"]
+        TIMER_SEC = timer_values["timer_secs"]
 
     # Initialize and launch a timer according to parameters
-    timer = Timer(hours = TIMER_HOURS,
-                  minutes = TIMER_MIN,
-                  seconds = TIMER_SEC)
+    timer = Timer(hours=TIMER_HOURS, minutes=TIMER_MIN, seconds=TIMER_SEC)
 
     # Check remaining time along the timer and print it
     counter = timer.is_timing_reached()
-    while counter == False:
+    while counter is False:
         print("minutaria -", "Remaining :", timer.get_timing[:9], end='\r',
               flush=True)
         counter = timer.is_timing_reached()
