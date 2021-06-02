@@ -21,7 +21,9 @@ Done
 - Manage presets and use *json* module to store them
 - ncurses interface via *curses* Python standard module with basic start/relaunch/quit command also usable with the lib's CLI
 - Gradually introduce type hints
+- Some fixes with Flake8 and PyLint
 - Minimal documentation
+- Minimal log system
 
 Expected
 --------
@@ -41,8 +43,8 @@ Dependencies
 
 Nothing except Python 3 and modules from the standard library, currently :
 
-- *datetime*, *argparse* and *json* for the lib
-- *curses*, *datetime* and *os* for the ncurses interface.
+- *datetime*, *argparse*, *logging* and *json* for the lib
+- *curses*, *datetime*, *logging* and *os* for the ncurses interface.
 
 Use
 ---
