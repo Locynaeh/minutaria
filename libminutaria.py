@@ -31,6 +31,7 @@ minutaria_cli
     Manage the CLI interface and correctness of user inputs.
 """
 
+import logging
 from datetime import datetime, timedelta
 import argparse
 import json
@@ -378,6 +379,34 @@ class Preset:
                     return True
 
 
+def logger(option: bool) -> None:
+    """
+    Create and return a console logger with level set to WARNING or DEBUG
+    if option provide is evaluate to True.
+    """
+    # Create logger
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+
+    # create console handler and set level to debug
+    console_handler = logging.StreamHandler()
+    if option:
+        console_handler.setLevel(logging.DEBUG)
+    else:
+        console_handler.setLevel(logging.WARNING)
+
+    # create formatter
+    chf = logging.Formatter('%(asctime)s:%(name)s:%(levelname)s: %(message)s')
+
+    # add formatter to ch
+    console_handler.setFormatter(chf)
+
+    # add ch to logger
+    logger.addHandler(console_handler)
+
+    return logger
+
+
 def minutaria_cli(default_timer: str) -> dict:
     """
     CLI for minutaria supporting choosing timer duration by hours, minutes
@@ -407,47 +436,52 @@ def minutaria_cli(default_timer: str) -> dict:
                         "--version",
                         action="version",
                         version="%(prog)s 1.0")
+    parser.add_argument("-d",
+                        "--debug",
+                        action="store_true",
+                        default=False,
+                        help="enable debugging")
     parser.add_argument("-H",
                         "--hours",
                         type=int,
                         action="store",
-                        help="Hour(s) to time")
+                        help="hour(s) to time")
     parser.add_argument("-M",
                         "--minutes",
                         type=int,
                         action="store",
-                        help="Minute(s) to time")
+                        help="minute(s) to time")
     parser.add_argument("-S",
                         "--seconds",
                         type=int,
                         action="store",
-                        help="Second(s) to time")
+                        help="second(s) to time")
     group.add_argument("-ap",
                        "--add_preset",
                        action="store",
                        metavar="PRESET_NAME",
-                       help="Name of the timer preset to create")
+                       help="name of the timer preset to create")
     group.add_argument("-p",
                        "--use_preset",
                        action="store",
                        metavar="PRESET_NAME",
-                       help="Name of the timer preset to use")
+                       help="name of the timer preset to use")
     group.add_argument("-rp",
                        "--rename_preset",
                        action="store",
                        nargs=2,
                        metavar=("OLD_NAME", "NEW_NAME"),
-                       help="Names of the timer preset to rename and the new")
+                       help="names of the timer preset to rename and the new")
     group.add_argument("-mpd",
                        "--modify_preset_duration",
                        action="store",
                        metavar="PRESET_NAME",
-                       help="Name of the timer preset to modify")
+                       help="name of the timer preset to modify")
     group.add_argument("-dp",
                        "--del_preset",
                        action="store",
                        metavar="PRESET_NAME",
-                       help="Name of the timer preset to delete")
+                       help="name of the timer preset to delete")
 
     args = parser.parse_args()
 
@@ -609,7 +643,7 @@ def minutaria_cli(default_timer: str) -> dict:
                   "does not exist. Please choose an existing preset.")
             exit()
 
-    return timer_values
+    return timer_values, args.debug
 
 
 if __name__ == '__main__':
@@ -626,7 +660,10 @@ if __name__ == '__main__':
     DEFAULT = str(default_duration)
 
     # Launch CLI and get timer values if user input
-    timer_values = minutaria_cli(DEFAULT)
+    timer_values, debug_option = minutaria_cli(DEFAULT)
+
+    # Initiate logger
+    logger = logger(debug_option)
 
     # Update timer parameters if modified by CLI
     if (timer_values["timer_hours"]
