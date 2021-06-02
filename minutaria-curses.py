@@ -29,29 +29,18 @@ main
     A main loop to display a ncurses TUI to a libminutaria.py timer.
 """
 
+import logging
 from os import name
 import curses  # see https://docs.python.org/fr/3.7/howto/curses.html
 from datetime import timedelta
 import libminutaria
 
+
 # Duration between flashes at the end of the timer
 FLASH_PERIOD = 1000
 
-# Check if not on Windows platform
-WINDOWS_CHECK = True
 
-if WINDOWS_CHECK:
-    try:
-        assert ("posix" in name), "May not be able to run correctly on "\
-                                  "non Posix systems."
-    except AssertionError as error:
-        print(error)
-        print("The program was stopped."
-              "Set WINDOWS_CHECK value to False to disable the check.")
-        exit()
-
-
-def main(stdscr):
+def main(stdscr) -> None:
     """
     ncurses main loop
     =================
@@ -162,7 +151,23 @@ if __name__ == '__main__':
     DEFAULT = str(default_duration)
 
     # Launch CLI and get timer values if user input
-    timer_values = libminutaria.minutaria_cli(DEFAULT)
+    timer_values, debug_option = libminutaria.minutaria_cli(DEFAULT)
+
+    # Initiate logger
+    logger = libminutaria.logger(debug_option)
+
+    # Check if not on Windows platform
+    WINDOWS_CHECK = True
+
+    if WINDOWS_CHECK:
+        try:
+            assert ("posix" in name), "May not be able to run correctly on "\
+                                      "non Posix systems."
+        except AssertionError as error:
+            print(f"{error}\nThe program was stopped. "
+                  "Set WINDOWS_CHECK value to False to disable the check.")
+            logger.debug("Exception occurred", exc_info=True)
+            exit()
 
     # Update timer parameters if modified by CLI
     if (timer_values["timer_hours"]
