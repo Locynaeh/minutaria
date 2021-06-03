@@ -41,10 +41,27 @@ Expected
 Dependencies
 ------------
 
-Nothing except Python 3 and modules from the standard library, currently :
+Nothing except Python 3 and modules from the standard library for the lib and the ncurses TUI, currently :
 
 - *datetime*, *argparse*, *logging* and *json* for the lib
 - *curses*, *datetime*, *logging* and *os* for the ncurses interface.
+
+For the GTK GUI, please follow `the guide <https://pygobject.readthedocs.io/en/latest/getting_started.html#gettingstarted>`_.
+
+For me, in short, on Debian :
+
+- Create virtual environment:
+    ``python3 -m venv venv``
+- Enter it:
+    ``source venv/bin/activate``
+- Execute the following command to install the build dependencies and GTK:
+    ``sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0``
+- Execute:
+    ``pip3 install pycairo``
+- Execute
+    ``pip3 install PyGObject``
+
+A requirement.txt is inclued in this repository for the two last steps.
 
 Use
 ---
