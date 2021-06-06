@@ -5,7 +5,7 @@ minutaria is a basic Python timer.
 
 The project is educational, it aims to teach myself programming, python programming, python's stdlib, tools (pdb, venv, mypy...) and ecosystem, development best pratices, git and some software testing libraries or frameworks.
 
-The project is separed in 3 parts :
+The project is separed in 3 parts:
 
 - a module as a library, completely usable as a CLI utility
 - a simple ncurses GUI using parts of the module
@@ -28,7 +28,7 @@ Done
 Expected
 --------
 
-- Usable with a GTK GUI and so :
+- Usable with a GTK GUI and so:
     - theming light/dark
     - reset the timer
     - add/use/manage presets
@@ -48,7 +48,7 @@ Nothing except Python 3 and modules from the standard library for the lib and th
 
 For the GTK GUI, please follow `the guide <https://pygobject.readthedocs.io/en/latest/getting_started.html#gettingstarted>`_.
 
-For me, in short, on Debian :
+For me, in short, on Debian, with pip in a venv virtual environment:
 
 - Create virtual environment:
     ``python3 -m venv venv``
