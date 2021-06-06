@@ -129,7 +129,7 @@ class Timer:
 
     @property
     def get_timing(self) -> str:
-        """The actual remaining time to reach 00:00:00 as a string.
+        """The actual remaining time to reach 00:00:00.
 
         Returns
         -------
@@ -192,12 +192,13 @@ class Preset:
         self._hours = hours
         self._minutes = minutes
         self._seconds = seconds
+        self._preset_file = 'preset.json'
         # If the preset file doesn't exist, create it
         try:
-            with open('preset.json', 'r'):
+            with open(self._preset_file, 'r'):
                 pass
         except FileNotFoundError:
-            with open('preset.json', 'w') as preset_file_write:
+            with open(self._preset_file, 'w') as preset_file_write:
                 json.dump([], preset_file_write, indent=4)
 
     def add(self) -> dict:
@@ -231,10 +232,10 @@ class Preset:
                                                   }
                                      }
             # Open the json preset file to add the new preset
-            with open('preset.json', 'r') as preset_file_read:
+            with open(self._preset_file, 'r') as preset_file_read:
                 # Load json presets to be modified
                 json_data = json.load(preset_file_read)
-                with open('preset.json', 'w') as preset_file_write:
+                with open(self._preset_file, 'w') as preset_file_write:
                     # Append the new json object
                     json_data.append(preset_dict_to_append)
                     json.dump(json_data, preset_file_write, indent=4)
@@ -266,7 +267,7 @@ class Preset:
                              "seconds": None}
 
         # Open the json preset file to search for the existing preset
-        with open('preset.json', 'r') as preset_file_read:
+        with open(self._preset_file, 'r') as preset_file_read:
             # Load json presets to be modified
             json_data = json.load(preset_file_read)
             for preset in json_data:
@@ -309,7 +310,7 @@ class Preset:
             raise exception
 
         # Open the json preset file to search for the existing preset to delete
-        with open('preset.json', 'r') as preset_file_read:
+        with open(self._preset_file, 'r') as preset_file_read:
             # Load json presets to be modified
             json_data = json.load(preset_file_read)
             for preset in json_data:
@@ -317,7 +318,7 @@ class Preset:
                 if preset["name"] == self._name:
                     # Delete the preset
                     json_data.remove(preset)
-                    with open('preset.json', 'w') as preset_file_write:
+                    with open(self._preset_file, 'w') as preset_file_write:
                         # Append the modified json object
                         json.dump(json_data, preset_file_write, indent=4)
                     return True
@@ -357,7 +358,7 @@ class Preset:
             self.new_name.get()
         except ValueError:
             # Open the json preset file to search for the preset to rename
-            with open('preset.json', 'r') as preset_file_read:
+            with open(self._preset_file, 'r') as preset_file_read:
                 # Load json presets to be modified
                 json_data = json.load(preset_file_read)
                 for preset in json_data:
@@ -365,7 +366,7 @@ class Preset:
                     if preset["name"] == self._name:
                         # Rename it if found
                         preset["name"] = new_name.lower()
-                        with open('preset.json', 'w') as preset_file_write:
+                        with open(self._preset_file, 'w') as preset_file_write:
                             # Append the modified json object
                             json.dump(json_data, preset_file_write, indent=4)
                         return True
@@ -409,7 +410,7 @@ class Preset:
         self._seconds = seconds
 
         # Open the json preset file to search for the preset to modify
-        with open('preset.json', 'r') as preset_file_read:
+        with open(self._preset_file, 'r') as preset_file_read:
             # Load json presets to be modified
             json_data = json.load(preset_file_read)
             for preset in json_data:
@@ -419,7 +420,7 @@ class Preset:
                     preset["duration"]["hours"] = self._hours
                     preset["duration"]["min"] = self._minutes
                     preset["duration"]["secs"] = self._seconds
-                    with open('preset.json', 'w') as preset_file_write:
+                    with open(self._preset_file, 'w') as preset_file_write:
                         # Append the modified json object
                         json.dump(json_data, preset_file_write, indent=4)
                     return True
