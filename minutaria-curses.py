@@ -41,9 +41,7 @@ FLASH_PERIOD = 1000
 
 
 def main(stdscr) -> None:
-    """
-    ncurses main loop
-    =================
+    """ncurses main loop
 
     Create a dedicated ncurses windows to launch a libminutaria.py's Timer
     with start/relaunch/quit utility all along.
