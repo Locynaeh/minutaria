@@ -24,6 +24,7 @@ Done
 - Some fixes with Flake8 and PyLint
 - Minimal documentation
 - Minimal log system
+- Unit tests with unittest and pytest without test run
 
 Expected
 --------
@@ -36,7 +37,7 @@ Expected
     - alarm volume
     - play a sound at 00:00:00.0
 - Pythonic code (idiomatic style, PEP8...)
-- Unit tests
+- Test run
 
 Dependencies
 ------------
