@@ -128,6 +128,7 @@ class TestPreset(unittest.TestCase):
                          {"hours": 2,
                          "minutes": 3,
                          "seconds": 4})
+
     def test_set_duration_if_not_exist(self):
         # Try to change duration of a non existing preset
         # Shall raise an error
