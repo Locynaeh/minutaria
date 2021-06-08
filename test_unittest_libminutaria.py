@@ -98,7 +98,7 @@ class TestPreset(unittest.TestCase):
     def test_rename(self):
         # Add the test preset to preset_test.json
         self.test_preset.add()
-        # Check if it was rename by checking the return value
+        # Check if it was renamed by checking the return value
         self.assertTrue(self.test_preset.rename('renamed_preset_test'))
         # Check the same with the Preset.get() method
         self.test_preset._name = 'renamed_preset_test'
