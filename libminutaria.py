@@ -173,7 +173,11 @@ class Preset:
         set a new duration to the preset if exist in the JSON file preset.json.
     """
 
-    def __init__(self, name: str, hours: int = 0, minutes: int = 0, seconds: int = 0):
+    def __init__(self, name: str,
+                 hours: int = 0,
+                 minutes: int = 0,
+                 seconds: int = 0,
+                 preset_file: str = 'preset.json'):
         """Initialize a virtual preset.
 
         Parameters
@@ -192,7 +196,7 @@ class Preset:
         self._hours = hours
         self._minutes = minutes
         self._seconds = seconds
-        self._preset_file = 'preset.json'
+        self._preset_file = preset_file     # Shall be a .json
         # If the preset file doesn't exist, create it
         try:
             with open(self._preset_file, 'r'):
@@ -354,7 +358,7 @@ class Preset:
         except ValueError as exception:
             raise exception
         try:
-            self.new_name = Preset(name=new_name)
+            self.new_name = Preset(name=new_name, preset_file=self._preset_file)
             self.new_name.get()
         except ValueError:
             # Open the json preset file to search for the preset to rename
