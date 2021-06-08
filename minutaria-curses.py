@@ -159,7 +159,7 @@ if __name__ == '__main__':
 
     if WINDOWS_CHECK:
         try:
-            assert ("posix" in name), "May not be able to run correctly on "\
+            assert("posix" in name), "May not be able to run correctly on "\
                                       "non Posix systems."
         except AssertionError as error:
             print(f"{error}\nThe program was stopped. "
