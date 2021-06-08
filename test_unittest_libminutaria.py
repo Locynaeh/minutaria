@@ -64,6 +64,8 @@ class TestPreset(unittest.TestCase):
                     is_preset_written_in_the_file = True
         self.assertTrue(is_preset_written_in_the_file)
 
+    def test_add_if_already_exist(self):
+        self.test_preset.add()
         # Try to add again the same preset to raise an error
         with self.assertRaises(ValueError):
             self.test_preset.add()
@@ -77,8 +79,8 @@ class TestPreset(unittest.TestCase):
                          "minutes": 2,
                          "seconds": 3})
 
+    def test_get_if_not_exist(self):
         # Change name and check if it raise an error because not found
-        self.test_preset._name = 'not_preset_test'
         with self.assertRaises(ValueError):
             self.test_preset.get()
 
@@ -87,7 +89,9 @@ class TestPreset(unittest.TestCase):
         self.test_preset.add()
         # Check if it was deleted by checking the return value
         self.assertTrue(self.test_preset.delete())
-        # Try to delete it again, it should raise an error
+
+    def test_delete_if_not_exist(self):
+        # Try to delete it again, it shall raise an error
         with self.assertRaises(ValueError):
             self.test_preset.delete()
 
@@ -100,6 +104,19 @@ class TestPreset(unittest.TestCase):
         self.test_preset._name = 'renamed_preset_test'
         self.assertTrue(self.test_preset.get())
 
+    def test_rename_if_not_exist(self):
+        # Try to rename a non existing preset in the file
+        self.test_preset._name = 'not_existing_preset_test'
+        with self.assertRaises(ValueError):
+            self.test_preset.rename('renamed_preset_test')
+
+    def test_rename_if_new_name_is_already_taken(self):
+        # Add the test preset to preset_test.json
+        self.test_preset.add()
+        self.test_preset._name = 'existing_preset_test'
+        self.test_preset.add()
+        with self.assertRaises(ValueError):
+            self.test_preset.rename('existing_preset_test')
 
     def test_set_duration(self):
         # Add the test preset to preset_test.json
@@ -111,6 +128,11 @@ class TestPreset(unittest.TestCase):
                          {"hours": 2,
                          "minutes": 3,
                          "seconds": 4})
+    def test_set_duration_if_not_exist(self):
+        # Try to change duration of a non existing preset
+        # Shall raise an error
+        with self.assertRaises(ValueError):
+            self.test_preset.set_duration(2, 3, 4)
 
     def tearDown(self):
         # Remove the JSON preset test file
