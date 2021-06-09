@@ -430,7 +430,7 @@ class Preset:
                     return True
 
 
-def logger(option: bool):
+def logger(option: bool) -> logging.Logger:
     """Create a logger.
 
     Create and return a console logger with level set to WARNING or DEBUG
