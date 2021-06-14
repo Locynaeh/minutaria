@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#!/usr/bin/env python3
 
 """
 libminutaria
@@ -32,6 +32,14 @@ minutaria_cli
 logger
     Return a console logger.
 """
+
+__all__ = ["__version__",
+           "Timer",
+           "Preset",
+           "logger",
+           "get_cli_args",
+           "handle_cli_args"
+           ]
 
 import logging
 from datetime import datetime, timedelta
@@ -716,32 +724,11 @@ def handle_cli_args(args: argparse.Namespace):
 
 
 if __name__ == '__main__':
-    # Default parameters to be use if the script is launched without argument
+    # Default parameters to be use if this file is launched as a test script
     # or modified by user input
     TIMER_HOURS = 0  # min 0, max 23
     TIMER_MIN = 0    # min 0, max 59
     TIMER_SEC = 5    # min 0, max 59
-
-    # Printable default duration
-    default_duration = timedelta(hours=+TIMER_HOURS,
-                                 minutes=+TIMER_MIN,
-                                 seconds=+TIMER_SEC)
-    DEFAULT = str(default_duration)
-
-    # Launch CLI and get timer values if user input
-    args = get_cli_args(DEFAULT)
-    timer_values, debug_option = handle_cli_args(args)
-
-    # Initiate logger
-    logger = logger(debug_option)
-
-    # Update timer parameters if modified by CLI
-    if (timer_values["timer_hours"]
-            or timer_values["timer_min"]
-            or timer_values["timer_secs"]):
-        TIMER_HOURS = timer_values["timer_hours"]
-        TIMER_MIN = timer_values["timer_min"]
-        TIMER_SEC = timer_values["timer_secs"]
 
     # Initialize and launch a timer according to parameters
     timer = Timer(hours=TIMER_HOURS, minutes=TIMER_MIN, seconds=TIMER_SEC)

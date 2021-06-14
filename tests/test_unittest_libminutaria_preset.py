@@ -1,11 +1,5 @@
 import unittest
-import sys
 import os
-#sys.path.append('..')
-#DOSSIER_COURRANT = os.path.dirname(os.path.abspath(__file__))
-#DOSSIER_PARENT = os.path.dirname(DOSSIER_COURRANT)
-#sys.path.append(DOSSIER_PARENT)
-#from datetime import datetime, timedelta
 import json
 from libminutaria import Preset
 
@@ -105,12 +99,4 @@ class TestPreset(unittest.TestCase):
 
 
 if __name__ == '__main__':
-#     if __package__ is None:
-#         import sys
-#         import os
-#         sys.path.append(os.path.dirname(os.path.dirname(path.abspath(__file__))))
-#         import libminutaria
-#     else:
-#         import libminutaria
-#
     unittest.main()
