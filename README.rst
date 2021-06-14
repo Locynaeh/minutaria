@@ -34,6 +34,7 @@ Expected
 - Usable with a GTK GUI and so:
     - theming light/dark
     - reset the timer
+    - pause/continue the timer
     - add/use/manage presets
     - alarm period
     - alarm volume
@@ -71,7 +72,7 @@ libminutaria.py is a library module which provides everything to create the time
 
 minutaria-cli.py contains a fully usable command line interface to libminutaria. It executes a default timer if launched without argument. Presets created by this way are stored in a JSON file. Use -h/--help arguments for more information.
 
-minutaria-curses.py contains the basic ncurses interface and so shall be launched via command line. It offers a start/relaunch/quit functionality and is fully usable with CLI arguments identically to minutaria-cli.py. This user interface shall only be use on Unix system as the Windows version isn't included in the standard library, the script contains a WINDOWS_CHECK parameter for this purpose. Nervertheless it should be usable with WSL (not tested).
+minutaria-curses.py contains the basic ncurses interface and so shall be launched via command line. It offers a start/pause/continue/relaunch/quit functionality and is fully usable with CLI arguments identically to minutaria-cli.py. This user interface shall only be use on Unix system as the Windows version isn't included in the standard library, the script contains a WINDOWS_CHECK parameter for this purpose. Nervertheless it should be usable with WSL (not tested).
 
 To use any interface to libminutaria, libminutaria shall be installed. As it is an educational project, do it in a virtual environment :
 
