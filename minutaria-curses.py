@@ -33,7 +33,7 @@ main
 import logging
 from os import name
 import curses  # see https://docs.python.org/fr/3.7/howto/curses.html
-from datetime import timedelta
+from datetime import datetime, timedelta
 import libminutaria
 
 
@@ -45,14 +45,20 @@ def main(stdscr) -> None:
     """ncurses main loop
 
     Create a dedicated ncurses windows to launch a libminutaria's Timer
-    with start/relaunch/quit utility all along.
+    with start/pause/continue/relaunch/quit utility all along.
 
     First an initial screen displays the initial timing and gives the user
     the launch or quit choice.
 
     Then, if launch is choosen, then the timer is launched and the user has the
-    choice to relaunch (reset the timer and return to the first screen) or
-    quit all along.
+    choice to relaunch (reset the timer and return to the first screen), pause
+    or quit all along.
+
+    If paused, the user has choice to relaunch (reset the timer and return to
+    the first screen), continue or quit.
+
+    If continued, the timer continue from the timing it was stopped. The user
+    still has the same possibility all along.
 
     Finally, at the end of the timer, a GONG is displayed 3 times with
     configurable flashes. Again the same relaunch/quit choice is given to
@@ -82,7 +88,7 @@ def main(stdscr) -> None:
         stdscr.refresh()
 
         # Create a windows dedicated to print timing
-        timer_window = curses.newwin(5, 40, 0, 0)
+        timer_window = curses.newwin(5, 60, 0, 0)
         # Don't block I/O calls for the timer window
         timer_window.nodelay(True)
 
@@ -93,25 +99,66 @@ def main(stdscr) -> None:
         counter = timer.is_timing_reached()
 
         # Launch the timer and print the remaining time
-        while counter is False:
-            timer_window.addstr(0, 0, "libminutaria", curses.A_STANDOUT)
-            timer_window.addstr(2, 0, "Remaining : " + timer.get_timing[:9])
-            timer_window.addstr(4, 0, "Press r to relaunch or q to quit...")
-            counter = timer.is_timing_reached()
-            # Manage user's choice for the timer loop
-            choice = timer_window.getch()
+        timer_loop = True
+        while timer_loop:
+            while counter is False:
+                timer_window.addstr(0, 0, "libminutaria", curses.A_STANDOUT)
+                timer_window.addstr(2, 0, "Remaining: " + timer.get_timing[:9])
+                timer_window.addstr(4, 0, "Press r to relaunch, p to pause or "
+                                    "q to quit...")
+                counter = timer.is_timing_reached()
+                # Manage user's choice for the timer loop
+                choice = timer_window.getch()
+                if choice == ord('q'):
+                    mainloop = False
+                    timer_loop = False
+                    break
+                elif choice == ord('r'):
+                    break
+                #elif choice == ord('p'):
+                #    break
+                # Manage user's choice for the main loop
+                elif choice == ord('p'):
+                    # Pause the timer
+                    # So create print the actual remaining time at p pressed
+                    # and wait for user instructions
+                    pause = True
+                    timer_window.addstr(0, 0,
+                                        "libminutaria", curses.A_STANDOUT)
+                    timer_window.addstr(2, 0,
+                                        "Remaining: " + timer.get_timing[:9])
+                    # And ask the user what to do
+                    while pause:
+                        timer_window.addstr(4, 0, "Press r to relaunch, p to "
+                                            "continue or q to quit...")
+                        choice = timer_window.getch()
+                        if choice == ord('q'):
+                            mainloop = False
+                            break
+                        elif choice == ord('r'):
+                            break
+                        elif choice == ord('p'):
+                            # Set the initial timer and counter
+                            # according to the remaining time at p press
+                            timer.continue_after_pause()
+                            timer_window.clear()
+                            timer_window.refresh()
+                            break
+
+                    if choice == ord('q'):
+                        mainloop = False
+                        break
+                    elif choice == ord('r'):
+                        pause = False
+                        break
+
             if choice == ord('q'):
-                mainloop = False
+                timer_loop = False
                 break
             elif choice == ord('r'):
-                break
-            timer_window.refresh()
-        # Manage user's choice for the main loop
-        if choice == ord('q'):
-            break
-        elif choice == ord('r'):
-            continue
-        else:
+                timer_loop = False
+                continue
+
             # Annouce timer's ending by a "Gong !" and a flash, 3 times
             timer_window.clear()
             timer_window.refresh()
@@ -123,17 +170,22 @@ def main(stdscr) -> None:
                 curses.flash()
                 curses.napms(FLASH_PERIOD)
 
-        # Give the user the choice to relaunch the timer or quit
-        endloop = True
-        while endloop:
-            timer_window.addstr(4, 0, "Press r to relaunch or q to quit...")
-            timer_window.refresh()
-            user_input = timer_window.getch()
-            if user_input == ord('r'):
-                break
-            elif user_input == ord('q'):
-                mainloop = False
-                break
+            # Give the user the choice to relaunch the timer or quit
+            timer_window.clear()
+            endloop = True
+            while endloop:
+                timer_window.addstr(0, 0, "libminutaria", curses.A_STANDOUT)
+                timer_window.addstr(2, 0,
+                                    "Press r to relaunch or q to quit...")
+                timer_window.refresh()
+                user_input = timer_window.getch()
+                if user_input == ord('r'):
+                    timer_loop = False
+                    break
+                elif user_input == ord('q'):
+                    timer_loop = False
+                    mainloop = False
+                    break
 
 
 if __name__ == '__main__':

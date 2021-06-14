@@ -146,6 +146,15 @@ class Timer:
         """
         return str(self._actualized_delta)
 
+    def continue_after_pause(self) -> None:
+        """Actualize timer parameters to continue timing after a pause.
+
+        Set the actual exact point of time since timer launch.
+        Set the actual delta since timer launch.
+        """
+        self._base = datetime.now()
+        self._delta = self._actualized_delta
+
 
 class Preset:
     """
