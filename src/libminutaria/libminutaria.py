@@ -73,6 +73,8 @@ class Timer:
     --------------
     is_timing_reached
         Check if timing reached 00:00:00.
+    continue_after_pause
+        Actualize timer parameters to continue timing after a pause.
     """
 
     def __init__(self, hours: int = 0, minutes: int = 0, seconds: int = 0):
