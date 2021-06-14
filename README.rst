@@ -84,6 +84,8 @@ To use any interface to libminutaria, libminutaria shall be installed. As it is 
 - Install the ``.whl`` file found in ``dist/``:
     ``python3 -m pip install dist/libminutaria-1.0-py3-none-any.whl``
 
+libminutaria shall also be install the same way to launch tests from the tests directory.
+
 License
 -------
 
