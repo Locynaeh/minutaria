@@ -1,7 +1,7 @@
-#! /usr/bin/python3
+#!/usr/bin/env python3
 
 """
-minutaria ncurses interface
+libminutaria ncurses interface
 ===========================
 
 :Authors:
@@ -9,13 +9,14 @@ minutaria ncurses interface
 :Version:
     1.0
 
-Basic ncurses interface based on the Python's curses standard library
+Basic liblibminutaria ncurses interface based on the Python's curses standard
+library.
 
 Give the user  a start/quit command at the beginning and the choice to
 relaunch the same timer or quit anytime
 Add a configurable flash system at the end of the timer
 
-The TUI is fully usable with CLI arguments thanks to libminutaria.py.
+The TUI is fully usable with CLI arguments thanks to liblibminutaria.
 Use -h/--help arguments for more information.
 
 This user interface shall only be use on Unix system as the Windows version
@@ -26,7 +27,7 @@ Nervertheless it should be usable with WSL (not tested).
 Functions
 ---------
 main
-    A main loop to display a ncurses TUI to a libminutaria.py timer.
+    A main loop to display a ncurses TUI to a liblibminutaria timer.
 """
 
 import logging
@@ -41,11 +42,9 @@ FLASH_PERIOD = 1000
 
 
 def main(stdscr) -> None:
-    """
-    ncurses main loop
-    =================
+    """ncurses main loop
 
-    Create a dedicated ncurses windows to launch a libminutaria.py's Timer
+    Create a dedicated ncurses windows to launch a libminutaria's Timer
     with start/relaunch/quit utility all along.
 
     First an initial screen displays the initial timing and gives the user
@@ -69,7 +68,7 @@ def main(stdscr) -> None:
     while mainloop:
         # Start or quit command
         stdscr.clear()
-        stdscr.addstr(0, 0, "minutaria", curses.A_STANDOUT)
+        stdscr.addstr(0, 0, "libminutaria", curses.A_STANDOUT)
         stdscr.addstr(2, 0, "Timing : " + str(initial_timing))
         stdscr.addstr(4, 0, "Press any key to launch or q to quit...")
         stdscr.refresh()
@@ -95,7 +94,7 @@ def main(stdscr) -> None:
 
         # Launch the timer and print the remaining time
         while counter is False:
-            timer_window.addstr(0, 0, "minutaria", curses.A_STANDOUT)
+            timer_window.addstr(0, 0, "libminutaria", curses.A_STANDOUT)
             timer_window.addstr(2, 0, "Remaining : " + timer.get_timing[:9])
             timer_window.addstr(4, 0, "Press r to relaunch or q to quit...")
             counter = timer.is_timing_reached()
@@ -116,7 +115,7 @@ def main(stdscr) -> None:
             # Annouce timer's ending by a "Gong !" and a flash, 3 times
             timer_window.clear()
             timer_window.refresh()
-            timer_window.addstr(0, 0, "minutaria", curses.A_STANDOUT)
+            timer_window.addstr(0, 0, "libminutaria", curses.A_STANDOUT)
             timer_window.refresh()
             for space in range(1, 4):
                 timer_window.addstr(2, 0, "GONG ! " * space)
@@ -150,8 +149,10 @@ if __name__ == '__main__':
                                  seconds=+TIMER_SEC)
     DEFAULT = str(default_duration)
 
+
     # Launch CLI and get timer values if user input
-    timer_values, debug_option = libminutaria.minutaria_cli(DEFAULT)
+    args = libminutaria.get_cli_args(DEFAULT)
+    timer_values, debug_option = libminutaria.handle_cli_args(args)
 
     # Initiate logger
     logger = libminutaria.logger(debug_option)
@@ -161,7 +162,7 @@ if __name__ == '__main__':
 
     if WINDOWS_CHECK:
         try:
-            assert ("posix" in name), "May not be able to run correctly on "\
+            assert("posix" in name), "May not be able to run correctly on "\
                                       "non Posix systems."
         except AssertionError as error:
             print(f"{error}\nThe program was stopped. "

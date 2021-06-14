@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#!/usr/bin/env python3
 
 """
 libminutaria
@@ -29,7 +29,17 @@ Functions
 ---------
 minutaria_cli
     Manage the CLI interface and correctness of user inputs.
+logger
+    Return a console logger.
 """
+
+__all__ = ["__version__",
+           "Timer",
+           "Preset",
+           "logger",
+           "get_cli_args",
+           "handle_cli_args"
+           ]
 
 import logging
 from datetime import datetime, timedelta
@@ -40,7 +50,6 @@ import json
 class Timer:
     """
     Simple timer printing as HH:MM:SS.n
-    ===================================
 
     Allow to launch a given timer, check remaining time before 00:00:00, check
     wether timing is reached and get the current timing along the process.
@@ -57,21 +66,17 @@ class Timer:
     _actualized_delta: timedelta
         The actualized duration according to time passed to be updated along
         the timer
-
-    Properties
-    ----------
     get_timing: str
         The actual remaining time to reach 00:00:00 for a launched timer.
 
     Public methods
     --------------
     is_timing_reached
-        Return True if timing reached 00:00:00.
+        Check if timing reached 00:00:00.
     """
 
     def __init__(self, hours: int = 0, minutes: int = 0, seconds: int = 0):
-        """
-        Launch a given timer.
+        """Create and launch a given timer.
 
         Parameters
         ----------
@@ -98,34 +103,53 @@ class Timer:
                                            seconds=+seconds)
 
     def _convert_delta_to_datetime(self) -> datetime:
-        """
-        Convert the base timedelta object to a datetime object allowing
+        """Convert the base timedelta object to a datetime object allowing
         arithmetic on it.
+
+        Returns
+        -------
+        datetime
+            Exact point of time to reach 00:00:00.
         """
         return self._base + self._delta
 
     def _rebase_current_time(self) -> None:
-        """Actualize timing according to current time."""
+        """Actualize timing according to current time.
+
+        Set the actual exact point of time since timer launch.
+        Set the actual delta since timer launch.
+        """
         self._actualization = datetime.now()
         self._actualized_delta = (self._convert_delta_to_datetime()
                                   - self._actualization)
 
     def is_timing_reached(self) -> bool:
-        """Return True if timing reached 00:00:00."""
+        """Check if timing reached 00:00:00.
+
+        Returns
+        -------
+        bool
+            True if timing reached 00:00:00, else False.
+        """
         self._rebase_current_time()
         timing_to_reach = self._convert_delta_to_datetime()
         return self._actualization >= timing_to_reach
 
     @property
     def get_timing(self) -> str:
-        """Return the actual remaining time to reach 00:00:00 as a string."""
+        """The actual remaining time to reach 00:00:00.
+
+        Returns
+        -------
+        str
+            The actual remaining time to reach 00:00:00.
+        """
         return str(self._actualized_delta)
 
 
 class Preset:
     """
     A preset timer manager for the Timer class
-    ==========================================
 
     Initialize a virtual timer preset which could be add as a preset to a
     dedicated preset management JSON file if it does not exist, modified if it
@@ -157,9 +181,12 @@ class Preset:
         set a new duration to the preset if exist in the JSON file preset.json.
     """
 
-    def __init__(self, name: str, hours: int = 0, minutes: int = 0, seconds: int = 0):
-        """
-        Initialize a virtual preset.
+    def __init__(self, name: str,
+                 hours: int = 0,
+                 minutes: int = 0,
+                 seconds: int = 0,
+                 preset_file: str = 'preset.json'):
+        """Initialize a virtual preset.
 
         Parameters
         ----------
@@ -177,19 +204,26 @@ class Preset:
         self._hours = hours
         self._minutes = minutes
         self._seconds = seconds
+        self._preset_file = preset_file     # Shall be a .json
         # If the preset file doesn't exist, create it
         try:
-            with open('preset.json', 'r'):
+            with open(self._preset_file, 'r'):
                 pass
         except FileNotFoundError:
-            with open('preset.json', 'w') as preset_file_write:
+            with open(self._preset_file, 'w') as preset_file_write:
                 json.dump([], preset_file_write, indent=4)
 
     def add(self) -> dict:
-        """
-        Check wether the choosen name does exist, if not create the preset and
+        """Add a new preset.
+
+        Check whether the choosen name does exist, if not create the preset,
         write it in the preset.json file and return the json object added as a
         dict, if yes raise an exception.
+
+        Returns
+        -------
+        preset_dict_to_append: dict
+            The name and duration of the new added preset.
 
         Raises
         ------
@@ -210,10 +244,10 @@ class Preset:
                                                   }
                                      }
             # Open the json preset file to add the new preset
-            with open('preset.json', 'r') as preset_file_read:
+            with open(self._preset_file, 'r') as preset_file_read:
                 # Load json presets to be modified
                 json_data = json.load(preset_file_read)
-                with open('preset.json', 'w') as preset_file_write:
+                with open(self._preset_file, 'w') as preset_file_write:
                     # Append the new json object
                     json_data.append(preset_dict_to_append)
                     json.dump(json_data, preset_file_write, indent=4)
@@ -223,9 +257,16 @@ class Preset:
             raise ValueError("ValueError: already existing preset")
 
     def get(self) -> dict:
-        """
-        Check wether the preset name does exist, if not raise an exception, if
+        """Get an existing preset's duration.
+
+        Check whether the preset name does exist, if not raise an exception, if
         yes return a dict containing timer values.
+
+        Returns
+        -------
+        timer_values: dict
+            The duration (hours, minutes and seconds) of
+            the existing preset.
 
         Raises
         ------
@@ -233,33 +274,39 @@ class Preset:
             If the preset does not exist.
         """
 
-        self.timer_values = {"hours": None,
+        timer_values = {"hours": None,
                              "minutes": None,
                              "seconds": None}
 
         # Open the json preset file to search for the existing preset
-        with open('preset.json', 'r') as preset_file_read:
+        with open(self._preset_file, 'r') as preset_file_read:
             # Load json presets to be modified
             json_data = json.load(preset_file_read)
             for preset in json_data:
                 # Search if the preset does exist
                 if preset["name"] == self._name:
                     # Get the preset's timing
-                    self.timer_values["hours"] = preset["duration"]["hours"]
-                    self.timer_values["minutes"] = preset["duration"]["min"]
-                    self.timer_values["seconds"] = preset["duration"]["secs"]
+                    timer_values["hours"] = preset["duration"]["hours"]
+                    timer_values["minutes"] = preset["duration"]["min"]
+                    timer_values["seconds"] = preset["duration"]["secs"]
 
-        if (self.timer_values["hours"] or
-                self.timer_values["minutes"] or
-                self.timer_values["seconds"]) is None:
+        if (timer_values["hours"] or
+                timer_values["minutes"] or
+                timer_values["seconds"]) is None:
             raise ValueError("ValueError: Preset not found")
 
-        return self.timer_values
+        return timer_values
 
     def delete(self) -> bool:
-        """
-        Check wether the preset name does exist, if not return None, if yes
-        delete the preset from the preset.json file and return True.
+        """Delete an existing preset.
+
+        Check whether the preset name does exist, if not raise an error, if yes
+        delete the preset from the preset.json file.
+
+        Returns
+        -------
+        bool
+            True if the preset got deleted.
 
         Raises
         ------
@@ -275,7 +322,7 @@ class Preset:
             raise exception
 
         # Open the json preset file to search for the existing preset to delete
-        with open('preset.json', 'r') as preset_file_read:
+        with open(self._preset_file, 'r') as preset_file_read:
             # Load json presets to be modified
             json_data = json.load(preset_file_read)
             for preset in json_data:
@@ -283,27 +330,34 @@ class Preset:
                 if preset["name"] == self._name:
                     # Delete the preset
                     json_data.remove(preset)
-                    with open('preset.json', 'w') as preset_file_write:
+                    with open(self._preset_file, 'w') as preset_file_write:
                         # Append the modified json object
                         json.dump(json_data, preset_file_write, indent=4)
                     return True
 
     def rename(self, new_name: str) -> bool:
-        """
-        Check wether the preset name to change does exist, if not raise an
+        """Rename an existing preset.
+
+        Check whether the preset name to change does exist, if not raise an
         exception. Check wether the new preset name does exist, if not rename
-        the preset in the preset.json file and return True, if yes raise an
-        exception.
+        the preset in the preset.json file, if yes raise an exception.
 
         Parameters
         ----------
         new_name : str
             The new name to set for the existing preset.
 
+        Returns
+        -------
+        bool
+            True if the preset got renamed.
+
         Raises
         ------
         ValueError
-            If the preset does not exist.
+            If the given preset name to rename does not exist.
+        ValueError
+            If the given new name corresponds to an existing preset.
         """
 
         # Check wether the preset exist and if the new name is available
@@ -312,11 +366,11 @@ class Preset:
         except ValueError as exception:
             raise exception
         try:
-            self.new_name = Preset(name=new_name)
+            self.new_name = Preset(name=new_name, preset_file=self._preset_file)
             self.new_name.get()
         except ValueError:
             # Open the json preset file to search for the preset to rename
-            with open('preset.json', 'r') as preset_file_read:
+            with open(self._preset_file, 'r') as preset_file_read:
                 # Load json presets to be modified
                 json_data = json.load(preset_file_read)
                 for preset in json_data:
@@ -324,7 +378,7 @@ class Preset:
                     if preset["name"] == self._name:
                         # Rename it if found
                         preset["name"] = new_name.lower()
-                        with open('preset.json', 'w') as preset_file_write:
+                        with open(self._preset_file, 'w') as preset_file_write:
                             # Append the modified json object
                             json.dump(json_data, preset_file_write, indent=4)
                         return True
@@ -333,9 +387,9 @@ class Preset:
 
     def set_duration(self, hours: int, minutes: int, seconds: int) -> bool:
         """
-        Check wether the choosen name does exist, if not raise an exception, if
-        yes update the preset duration according to parameters, write it in the
-        preset.json file and return True.
+        Check whether the choosen name does exist, if not raise an exception,
+        if yes update the preset duration according to parameters, write it in
+        the preset.json file.
 
         Parameters
         ----------
@@ -345,6 +399,11 @@ class Preset:
             The new minutes quantity of the timer preset
         seconds: int
             The new seconds quantity of the timer preset
+
+        Returns
+        -------
+        bool
+            True if the duration got changed.
 
         Raises
         ------
@@ -363,7 +422,7 @@ class Preset:
         self._seconds = seconds
 
         # Open the json preset file to search for the preset to modify
-        with open('preset.json', 'r') as preset_file_read:
+        with open(self._preset_file, 'r') as preset_file_read:
             # Load json presets to be modified
             json_data = json.load(preset_file_read)
             for preset in json_data:
@@ -373,16 +432,17 @@ class Preset:
                     preset["duration"]["hours"] = self._hours
                     preset["duration"]["min"] = self._minutes
                     preset["duration"]["secs"] = self._seconds
-                    with open('preset.json', 'w') as preset_file_write:
+                    with open(self._preset_file, 'w') as preset_file_write:
                         # Append the modified json object
                         json.dump(json_data, preset_file_write, indent=4)
                     return True
 
 
-def logger(option: bool) -> None:
-    """
+def logger(option: bool) -> logging.Logger:
+    """Create a logger.
+
     Create and return a console logger with level set to WARNING or DEBUG
-    if option provide is evaluate to True.
+    if option provided is evaluate to True.
     """
     # Create logger
     logger = logging.getLogger(__name__)
@@ -407,19 +467,17 @@ def logger(option: bool) -> None:
     return logger
 
 
-def minutaria_cli(default_timer: str) -> dict:
-    """
+def get_cli_args(default_timer: str) -> argparse.Namespace:
+    """Command Line Interface for minutaria.
+
     CLI for minutaria supporting choosing timer duration by hours, minutes
     and seconds separately and managing preset : add, delete, rename, change
     duration of an existing preset and use an existing preset.
 
-    If a timing duration only is choosen, return the following dictionary
-    {"timer_hours": hours, "timer_min": minutes, "timer_secs": seconds}
-    where "hours", "minutes" and "seconds" are integers.
-
-    Else, exit the program after having done the expecting actions.
-
-    Also, manage incorrect user inputs.
+    Returns
+    -------
+    argparse.Namespace
+        The command line arguments input by the user.
     """
     parser = argparse.ArgumentParser(prog="minutaria",
                                      description="Execute a given timer from "
@@ -483,8 +541,27 @@ def minutaria_cli(default_timer: str) -> dict:
                        metavar="PRESET_NAME",
                        help="name of the timer preset to delete")
 
-    args = parser.parse_args()
+    return parser.parse_args()
 
+def handle_cli_args(args: argparse.Namespace):
+    """Command line arguments'handler for minutaria.
+
+    If a timing duration only is choosen, return the following dictionary
+    {"timer_hours": hours, "timer_min": minutes, "timer_secs": seconds}
+    where "hours", "minutes" and "seconds" are integers.
+
+    Else, exit the program after having done the expecting actions.
+
+    Also, manage incorrect user inputs.
+
+    Returns
+    -------
+    timer_values: dict
+        The duration (hours, minutes and seconds) of
+        the an existing requested preset.
+    args.debug : bool
+        True if set, else False.
+    """
     # Accepted ranges error management
     if args.hours and args.hours not in range(0, 24):
         print("minutaria: Error: argument -H/--hours: invalid choice:"
@@ -647,31 +724,11 @@ def minutaria_cli(default_timer: str) -> dict:
 
 
 if __name__ == '__main__':
-    # Default parameters to be use if the script is launched without argument
+    # Default parameters to be use if this file is launched as a test script
     # or modified by user input
     TIMER_HOURS = 0  # min 0, max 23
     TIMER_MIN = 0    # min 0, max 59
     TIMER_SEC = 5    # min 0, max 59
-
-    # Printable default duration
-    default_duration = timedelta(hours=+TIMER_HOURS,
-                                 minutes=+TIMER_MIN,
-                                 seconds=+TIMER_SEC)
-    DEFAULT = str(default_duration)
-
-    # Launch CLI and get timer values if user input
-    timer_values, debug_option = minutaria_cli(DEFAULT)
-
-    # Initiate logger
-    logger = logger(debug_option)
-
-    # Update timer parameters if modified by CLI
-    if (timer_values["timer_hours"]
-            or timer_values["timer_min"]
-            or timer_values["timer_secs"]):
-        TIMER_HOURS = timer_values["timer_hours"]
-        TIMER_MIN = timer_values["timer_min"]
-        TIMER_SEC = timer_values["timer_secs"]
 
     # Initialize and launch a timer according to parameters
     timer = Timer(hours=TIMER_HOURS, minutes=TIMER_MIN, seconds=TIMER_SEC)
