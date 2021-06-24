@@ -2,7 +2,7 @@
 
 """
 libminutaria-cli
-=============
+================
 
 :Authors:
     Locynaeh
