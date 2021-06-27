@@ -569,7 +569,7 @@ def handle_cli_args(args: argparse.Namespace):
     -------
     timer_values: dict
         The duration (hours, minutes and seconds) of
-        the an existing requested preset.
+        the requested preset.
     args.debug : bool
         True if set, else False.
     """
