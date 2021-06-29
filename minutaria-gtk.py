@@ -50,8 +50,8 @@ class AppBox(Gtk.Box):
         self.timer_box = TimerBox()
         self.pack_start(self.timer_box, False, True, 0)
 
-        self.preset_box = PresetBox()
-        self.pack_start(self.preset_box, False, True, 0)
+        self.preset_grid = PresetGrid()
+        self.pack_start(self.preset_grid, False, True, 0)
 
 
 class TimerBox(Gtk.Box):
@@ -103,7 +103,23 @@ class TimerBox(Gtk.Box):
         if (selection["timer_hours"] == 0
             and selection["timer_min"] == 0
             and selection["timer_secs"] == 0):
-            label.set_label("Please select a duration superior to 00:00:00")
+            # Create and display a message dialog
+            # to handle the no duration selection
+            no_duration = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
+                                            modal=True,
+                                            message_type=Gtk.MessageType.INFO,
+                                            text="No duration selected")
+            no_duration.format_secondary_text(f"Please select a duration "
+                                              f"superior to 00:00:00")
+            no_duration.add_button("OK", Gtk.ResponseType.OK)
+
+            # Close the dialog if OK button is pressed or window is closed
+            response = no_duration.run()
+            if (response == Gtk.ResponseType.OK
+                or response == Gtk.ResponseType.DELETE_EVENT):
+                no_duration.destroy()
+
+            # Actualize the state
             self.state = 0
         else:
             # Handle state
@@ -168,7 +184,10 @@ class IntroBox(Gtk.Box):
         Gtk.Box.__init__(self, spacing=6)
         self.instruction_label = Gtk.Label()
         self.instruction_label.set_label("Please enter a remaining time")
+        self.instruction_label.set_xalign(1)  # align to the center
+
         self.param = Gtk.MenuButton(halign='end')
+        self.param.set_direction(Gtk.ArrowType(4))
 
         self.pack_start(self.instruction_label, True, True, 0)
         self.pack_start(self.param, True, True, 0)
@@ -234,56 +253,138 @@ class TimingBox(Gtk.Box):
         return timer_selected
 
 
-class PresetBox(Gtk.Box):
+class PresetGrid(Gtk.Grid):
     """Container to all the preset management elements."""
     def __init__(self):
-        Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        Gtk.Grid.__init__(self)
+        self.set_column_spacing(6)
+        self.set_row_spacing(6)
 
-        self.instruction_label = Gtk.Label()
-        self.instruction_label.set_label("Preset")
-        self.instruction_label.set_xalign(0)  # align to the left
-        self.pack_start(self.instruction_label, False, True, 0)
+        # Intro block : title + separator
+        self.title_label = Gtk.Label()
+        self.title_label.set_label("Preset")
+        self.title_label.set_xalign(0)  # align to the left
+        self.attach(self.title_label, 0, 0, 3, 1)
 
         self.separator = SeparatorBox()
-        self.pack_start(self.separator, False, True, 0)
+        self.attach(self.separator, 0, 1, 3, 1)
 
-        self.add_preset_box = AddPresetBox()
-        self.pack_start(self.add_preset_box, False, True, 0)
-
-        self.del_preset_box = DelPresetBox()
-        self.pack_start(self.del_preset_box, False, True, 0)
-
-
-class AddPresetBox(Gtk.Box):
-    """Container to all the necessary elements to add a new preset."""
-    def __init__(self):
-        Gtk.Box.__init__(self, spacing=6)
-
+        # Add, modify duration or rename existing preset part
         self.entry_preset_name = Gtk.Entry()
-        self.entry_preset_name.set_placeholder_text("Enter a new preset name")
-        self.pack_start(self.entry_preset_name, True, True, 0)
+        self.entry_preset_name.set_placeholder_text(f"Enter a name to a new "
+                                                    f"preset or a new name to "
+                                                    f"an existing one")
+        self.entry_preset_name.set_tooltip_text(f"Enter a name to a new preset"
+                                                f" or a new name to an "
+                                                f"existing one.")
+        # Force entry to fill the space
+        self.entry_preset_name.set_size_request(380, 10)
+        self.attach(self.entry_preset_name, 0, 2, 3, 1)
 
+        # Add
         self.add_button = Gtk.Button(label="Add")
         self.add_button.connect('clicked',
                                 self.get_preset_entry)
-        self.pack_start(self.add_button, True, True, 0)
+        self.attach(self.add_button, 0, 3, 1, 1)
 
-    def get_preset_entry(self, button):
-        entry = self.entry_preset_name.get_text()
-        print(entry)
+        # Set new duration
+        self.set_button = Gtk.Button(label="Set timing")
+        self.set_button.connect('clicked',
+                                self.set_preset_duration)
+        self.attach(self.set_button, 1, 3, 1, 1)
 
+        # Rename
+        self.rename_button = Gtk.Button(label="Rename")
+        self.rename_button.connect('clicked',
+                                   self.rename_preset)
+        self.attach(self.rename_button, 2, 3, 1, 1)
 
-class DelPresetBox(Gtk.Box):
-    """Container to all the necessary elements to delete an existing preset."""
-    def __init__(self):
-        Gtk.Box.__init__(self, spacing=6)
-
+        # Deletion part
         self.select_preset_name = Gtk.ComboBoxText()
         self.select_preset_name.prepend_text("Choose a preset")
-        self.pack_start(self.select_preset_name, True, True, 0)
+        self.select_preset_name.set_tooltip_text(f"Select a preset name to use"
+                                                f" or to delete.")
+        # Force entry to fill the space
+        #self.select_preset_name.set_size_request(260, 10)
+        self.attach(self.select_preset_name, 0, 4, 2, 1)
 
-        self.del_button = Gtk.Button(label="Del")
-        self.pack_start(self.del_button, True, True, 0)
+        self.del_button = Gtk.Button(label="Delete")
+        self.del_button.connect('clicked',
+                                self.rename_preset)
+        self.attach(self.del_button, 2, 4, 1, 1)
+
+    def get_preset_entry(self, button):
+        #(self.entry_preset_name.get_text().strip() == "")
+        return self.entry_preset_name.get_text().strip()
+
+    def add_new_preset(self, button):
+        pass
+
+    def set_preset_duration(self, button):
+        pass
+
+    def rename_preset(self, button):
+        pass
+
+    def delete_preset(self, button):
+        pass
+        """
+        # Add new preset
+        new_preset = Preset(args.add_preset,
+                            timer_values["timer_hours"],
+                            timer_values["timer_min"],
+                            timer_values["timer_secs"])
+
+        try:
+            new_preset.add()
+            new_preset_duration = timedelta(hours=+timer_values["timer_hours"],
+                                            minutes=+timer_values["timer_min"],
+                                            seconds=+timer_values["timer_secs"])
+            print("New preset added: "
+                  f"{args.add_preset.capitalize()} - "
+                  f"{str(new_preset_duration)}")
+            exit()
+        except ValueError:
+            print(f"The preset name {args.add_preset.capitalize()} "
+                  f"already exist. Please choose an other name.")
+            exit()
+
+        # Modify existing preset
+        # Modify the corresponding preset and quit
+        try:
+            preset_to_modify = Preset(args.modify_preset_duration)
+            modified = preset_to_modify.set_duration(timer_values["timer_hours"],
+                                                     timer_values["timer_min"],
+                                                     timer_values["timer_secs"])
+            modified_duration = timedelta(hours=+timer_values["timer_hours"],
+                                          minutes=+timer_values["timer_min"],
+                                          seconds=+timer_values["timer_secs"])
+
+            if modified:
+                print("New preset duration: "
+                      f"{args.modify_preset_duration.capitalize()}"
+                      f" - {str(modified_duration)}")
+                exit()
+        except ValueError:
+            print(f"The preset {args.modify_preset_duration.capitalize()} "
+                  "does not exist. Please choose an existing name.")
+            exit()
+
+        # Rename the corresponding preset and quit
+        try:
+            preset_to_rename = Preset(args.rename_preset[0])
+            renamed = preset_to_rename.rename(args.rename_preset[1])
+
+            if renamed:
+                print(f"Preset {args.rename_preset[0].capitalize()} renamed: "
+                      f"{args.rename_preset[1].capitalize()}")
+                exit()
+        except ValueError:
+            print(f"The preset {args.rename_preset[0].capitalize()} "
+                  f"does not exist or the new name "
+                  f"{args.rename_preset[1].capitalize()} is not available.")
+            exit()
+        """
 
 
 if __name__ == '__main__':
