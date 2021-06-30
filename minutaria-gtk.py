@@ -50,7 +50,7 @@ class AppBox(Gtk.Box):
         self.timer_box = TimerBox()
         self.pack_start(self.timer_box, False, True, 0)
 
-        self.preset_grid = PresetGrid()
+        self.preset_grid = PresetGrid(self.timer_box)
         self.pack_start(self.preset_grid, False, True, 0)
 
 
@@ -91,40 +91,63 @@ class TimerBox(Gtk.Box):
         self.end_timer_separator = SeparatorBox()
         self.pack_start(self.end_timer_separator, False, True, 0)
 
-        self.state = 0  # 0: stopped, 1: started, 2: paused
+        self.state = 0  # 0: stopped, 1: running, 2: paused
         self.timer = Timer(hours=0, minutes=0, seconds=0)
         self.counter = False
 
-    def start_selected_timer(self, button, label, timing_box):
-        """Handle start/pause/restart a choosen timer"""
+    def zero_timing_dialog(self) -> None:
+        """Display a message dialog corresponding to an empty timing selection.
+
+        Create a warning message dialog with a corresponding title and text.
+        Add an "OK" button to close the dialog. Manage in the same way a close
+        action on the dialog by the user.
+        """
+        # Create and display a message dialog
+        # to handle the no duration selection
+        no_duration = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
+                                        modal=True,
+                                        message_type=Gtk.MessageType.INFO,
+                                        text="No duration selected")
+        no_duration.format_secondary_text(f"Please select a duration "
+                                          f"superior to 00:00:00")
+        no_duration.add_button("OK", Gtk.ResponseType.OK)
+
+        # Close the dialog if OK button is pressed or window is closed
+        response = no_duration.run()
+        if (response == Gtk.ResponseType.OK
+            or response == Gtk.ResponseType.DELETE_EVENT):
+            no_duration.destroy()
+
+    def start_selected_timer(self, button, label, timing_box) -> None:
+        """Handle start/pause/restart a choosen timer.
+
+        Get the selected timing by the user on the spinboxes.
+        Manage timing == 0 to display a message dialog in case of.
+        Then check the state :
+         - if "stopped", set it to "running" and initialize the timer
+           according to the user selection
+         - if "running", set it to "paused"
+         - if "paused", set it to "running" and actualize the existing timer.
+        Finally manage the timer to run it until 00:00:00 and print 3 times a
+        "GONG !".
+        Checking state in the process, break if "paused".
+        A the end, set the state to "stopped".
+        """
+        # Get the selected timing
         selection = timing_box.get_entry()
 
-        # Check whether the user input a timer with the name of the preset to add
+        # Check whether the timing is valid and handle the state of the timer
         if (selection["timer_hours"] == 0
             and selection["timer_min"] == 0
             and selection["timer_secs"] == 0):
-            # Create and display a message dialog
-            # to handle the no duration selection
-            no_duration = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
-                                            modal=True,
-                                            message_type=Gtk.MessageType.INFO,
-                                            text="No duration selected")
-            no_duration.format_secondary_text(f"Please select a duration "
-                                              f"superior to 00:00:00")
-            no_duration.add_button("OK", Gtk.ResponseType.OK)
-
-            # Close the dialog if OK button is pressed or window is closed
-            response = no_duration.run()
-            if (response == Gtk.ResponseType.OK
-                or response == Gtk.ResponseType.DELETE_EVENT):
-                no_duration.destroy()
+            self.zero_timing_dialog()
 
             # Actualize the state
             self.state = 0
         else:
             # Handle state
             if self.state == 0:
-                # If state was "stopped", then change it to "started"
+                # If state was "stopped", then change it to "running"
                 self.state = 1
 
                 # Initialize the timer according to the user selection
@@ -158,8 +181,12 @@ class TimerBox(Gtk.Box):
                 # Set state to "stopped" since the timer ended
                 self.state = 0
 
-    def reset_stop_timer(self, button, label, timing_box):
-        """Handle reset/stop the timer"""
+    def reset_stop_timer(self, button, label, timing_box) -> None:
+        """Handle reset/stop the timer.
+
+        Set the state of the timer to "stopped" (0) and set the timer label
+        to the selected value by the user on the spinboxes.
+        """
         self.state = 0
         selection = timing_box.get_entry()
 
@@ -255,10 +282,13 @@ class TimingBox(Gtk.Box):
 
 class PresetGrid(Gtk.Grid):
     """Container to all the preset management elements."""
-    def __init__(self):
+    def __init__(self, timer_box_access):
         Gtk.Grid.__init__(self)
         self.set_column_spacing(6)
         self.set_row_spacing(6)
+
+        # Get the timer_box to access its methods
+        self.timer_box_access = timer_box_access
 
         # Intro block : title + separator
         self.title_label = Gtk.Label()
@@ -284,7 +314,8 @@ class PresetGrid(Gtk.Grid):
         # Add
         self.add_button = Gtk.Button(label="Add")
         self.add_button.connect('clicked',
-                                self.get_preset_entry)
+                                self.add_new_preset,
+                                self.timer_box_access)
         self.attach(self.add_button, 0, 3, 1, 1)
 
         # Set new duration
@@ -313,63 +344,138 @@ class PresetGrid(Gtk.Grid):
                                 self.rename_preset)
         self.attach(self.del_button, 2, 4, 1, 1)
 
-    def get_preset_entry(self, button):
-        #(self.entry_preset_name.get_text().strip() == "")
+    def empty_name_dialog(self) -> None:
+        """Display a message dialog corresponding to an empty name entry.
+
+        Create a warning message dialog with a corresponding title and text.
+        Add an "OK" button to close the dialog. Manage in the same way a close
+        action on the dialog by the user.
+        """
+        empty_name = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
+                                       modal=True,
+                                       message_type=Gtk.MessageType.WARNING,
+                                       text="No name entered")
+        empty_name.format_secondary_text("Please enter a name")
+        empty_name.add_button("OK", Gtk.ResponseType.OK)
+
+        # Close the dialog if OK button is pressed or window is closed
+        response = empty_name.run()
+        if (response == Gtk.ResponseType.OK
+            or response == Gtk.ResponseType.DELETE_EVENT):
+            empty_name.destroy()
+
+    def get_preset_entry(self):
+        """The content of the entry.
+
+        Returns
+        -------
+        str
+            The text entered by the user to the corresponding entry.
+        """
+
         return self.entry_preset_name.get_text().strip()
 
-    def add_new_preset(self, button):
-        pass
+    def add_new_preset(self, button, timer_box_access) -> None:
+        """Add a new preset.
 
-    def set_preset_duration(self, button):
-        pass
-
-    def rename_preset(self, button):
-        pass
-
-    def delete_preset(self, button):
-        pass
+        Manage following issue by displaying the appropriate message:
+         - name does already exist
+         - No name entered
+         - Choosen duration equal 00:00:00
+        If none of thses issues are raised, add the preset to the JSON preset
+        file.
         """
+
+        # Get the user's choosen name
+        preset_name = self.get_preset_entry()
+
+        # Check if it's empty and handle it
+        if preset_name == "":
+            self.empty_name_dialog()
+            return
+
+        # Get the selected timing
+        selection = timer_box_access.timing_box.get_entry()
+        #print(selection)
+        if (selection["timer_hours"] == 0
+            and selection["timer_min"] == 0
+            and selection["timer_secs"] == 0):
+            timer_box_access.zero_timing_dialog()
+            return
+
+
         # Add new preset
-        new_preset = Preset(args.add_preset,
-                            timer_values["timer_hours"],
-                            timer_values["timer_min"],
-                            timer_values["timer_secs"])
+        new_preset = Preset(preset_name,
+                            selection["timer_hours"],
+                            selection["timer_min"],
+                            selection["timer_secs"])
 
         try:
             new_preset.add()
-            new_preset_duration = timedelta(hours=+timer_values["timer_hours"],
-                                            minutes=+timer_values["timer_min"],
-                                            seconds=+timer_values["timer_secs"])
-            print("New preset added: "
-                  f"{args.add_preset.capitalize()} - "
-                  f"{str(new_preset_duration)}")
-            exit()
-        except ValueError:
-            print(f"The preset name {args.add_preset.capitalize()} "
-                  f"already exist. Please choose an other name.")
-            exit()
+            new_preset_duration = timedelta(hours=+selection["timer_hours"],
+                                            minutes=+selection["timer_min"],
+                                            seconds=+selection["timer_secs"])
 
+            msg_new = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
+                                        modal=True,
+                                        message_type=Gtk.MessageType.WARNING,
+                                        text="New preset added")
+            msg_new.format_secondary_text(f"{preset_name.capitalize()} - "
+                                          f"{str(new_preset_duration)}")
+            msg_new.add_button("OK", Gtk.ResponseType.OK)
+
+            # Close the dialog if OK button is pressed or window is closed
+            response = msg_new.run()
+            if (response == Gtk.ResponseType.OK
+                or response == Gtk.ResponseType.DELETE_EVENT):
+                msg_new.destroy()
+
+            # Reset the entry
+            self.entry_preset_name.set_text("")
+        except ValueError:
+            msg_not = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
+                                        modal=True,
+                                        message_type=Gtk.MessageType.WARNING,
+                                        text="Already existing name")
+            msg_not.format_secondary_text(f"The preset name "
+                                          f"{preset_name.capitalize()} already"
+                                          f" exist. Please choose an "
+                                          f"other name.")
+            msg_not.add_button("OK", Gtk.ResponseType.OK)
+
+            # Close the dialog if OK button is pressed or window is closed
+            response = msg_not.run()
+            if (response == Gtk.ResponseType.OK
+                or response == Gtk.ResponseType.DELETE_EVENT):
+                msg_not.destroy()
+
+    def set_preset_duration(self, button):
+        pass
+        """
         # Modify existing preset
         # Modify the corresponding preset and quit
         try:
             preset_to_modify = Preset(args.modify_preset_duration)
             modified = preset_to_modify.set_duration(timer_values["timer_hours"],
-                                                     timer_values["timer_min"],
-                                                     timer_values["timer_secs"])
+                                                    timer_values["timer_min"],
+                                                    timer_values["timer_secs"])
             modified_duration = timedelta(hours=+timer_values["timer_hours"],
-                                          minutes=+timer_values["timer_min"],
-                                          seconds=+timer_values["timer_secs"])
+                                        minutes=+timer_values["timer_min"],
+                                        seconds=+timer_values["timer_secs"])
 
             if modified:
                 print("New preset duration: "
-                      f"{args.modify_preset_duration.capitalize()}"
-                      f" - {str(modified_duration)}")
+                    f"{args.modify_preset_duration.capitalize()}"
+                    f" - {str(modified_duration)}")
                 exit()
         except ValueError:
             print(f"The preset {args.modify_preset_duration.capitalize()} "
-                  "does not exist. Please choose an existing name.")
+                "does not exist. Please choose an existing name.")
             exit()
-
+        """
+    def rename_preset(self, button):
+        pass
+        """
         # Rename the corresponding preset and quit
         try:
             preset_to_rename = Preset(args.rename_preset[0])
@@ -377,14 +483,32 @@ class PresetGrid(Gtk.Grid):
 
             if renamed:
                 print(f"Preset {args.rename_preset[0].capitalize()} renamed: "
-                      f"{args.rename_preset[1].capitalize()}")
+                    f"{args.rename_preset[1].capitalize()}")
                 exit()
         except ValueError:
             print(f"The preset {args.rename_preset[0].capitalize()} "
-                  f"does not exist or the new name "
-                  f"{args.rename_preset[1].capitalize()} is not available.")
+                f"does not exist or the new name "
+                f"{args.rename_preset[1].capitalize()} is not available.")
             exit()
         """
+
+    def delete_preset(self, button):
+        pass
+        """
+        # Delete the corresponding preset and quit
+        try:
+            preset_to_delete = Preset(args.del_preset)
+            deleted = preset_to_delete.delete()
+
+            if deleted:
+                print(f"Preset deleted: {args.del_preset.capitalize()}")
+                exit()
+        except ValueError:
+            print(f"The preset {args.del_preset.capitalize()} does not exist.")
+            exit()
+        """
+
+
 
 
 if __name__ == '__main__':
