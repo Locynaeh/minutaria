@@ -74,14 +74,14 @@ class TimerBox(Gtk.Box):
         self.timing_print = Gtk.Label(label="0:00:00")
         self.pack_start(self.timing_print, False, True, 10)
 
-        self.start_pause_button = Gtk.Button(label="Start/Pause")
+        self.start_pause_button = Gtk.Button(label="Start /Pause")
         self.start_pause_button.connect('clicked',
                                         self.start_selected_timer,
                                         self.timing_print,
                                         self.timing_box)
         self.pack_start(self.start_pause_button, False, True, 0)
 
-        self.reset_stop_button = Gtk.Button(label="Reset/Stop")
+        self.reset_stop_button = Gtk.Button(label="Reset / Stop")
         self.reset_stop_button.connect('clicked',
                                         self.reset_stop_timer,
                                         self.timing_print,
@@ -330,19 +330,76 @@ class PresetGrid(Gtk.Grid):
                                    self.rename_preset)
         self.attach(self.rename_button, 2, 3, 1, 1)
 
-        # Deletion part
+        # Existing preset selection
         self.select_preset_name = Gtk.ComboBoxText()
-        self.select_preset_name.prepend_text("Choose a preset")
         self.select_preset_name.set_tooltip_text(f"Select a preset name to use"
                                                 f" or to delete.")
+        # Fill the list with preset if exist
+        self.refill_preset_list()
+        self.select_preset_name.connect('changed',
+                                        self.selected_preset_to_spinbutton,
+                                        self.timer_box_access)
         # Force entry to fill the space
         #self.select_preset_name.set_size_request(260, 10)
         self.attach(self.select_preset_name, 0, 4, 2, 1)
 
+        # Deletion part
         self.del_button = Gtk.Button(label="Delete")
         self.del_button.connect('clicked',
-                                self.rename_preset)
+                                self.delete_preset)
         self.attach(self.del_button, 2, 4, 1, 1)
+
+    def refill_preset_list(self) -> None:
+        """Actualize the list
+
+        Empty the list then refill it with all existing preset preceding by
+        the "Choose a preset" default value or "No preset created yet" if there
+        is no existing preset.
+        """
+        # Empty the list
+        self.select_preset_name.remove_all()
+        # Create fake new preset to access to the get_all method
+        new_fake_preset = Preset("get_all")
+
+        try:
+            all_preset_names = new_fake_preset.get_all()
+            # Add all preset names to the preset list
+            for preset in all_preset_names:
+                self.select_preset_name.append_text(preset)
+
+            self.select_preset_name.prepend_text("Choose a preset")
+            self.select_preset_name.set_active(0)
+        except ValueError:
+            self.select_preset_name.append_text("No preset created yet")
+            self.select_preset_name.set_active(0)
+
+    def selected_preset_to_spinbutton(self, comboboxtext, timer_box) -> None:
+        """Set the spinbuttons according to the preset selected.
+
+        Get the selected preset then set each spinbutton value according to
+        the preset duration. No action is done for placeholders/default values.
+        """
+
+        # Get the selected preset name from the list
+        name = self.select_preset_name.get_active_text()
+
+        # Check if it's one the placeholders/default values or None,
+        # return instead
+        if ((name == "Choose a preset")
+            or (name == "No preset created yet")
+            or name == None):
+            return
+
+        # Create the preset model to access to the get method
+        selected_preset = Preset(name)
+
+        # Get the duration of the preset
+        duration = selected_preset.get()
+
+        # Set the spinbuttons according to the duration
+        timer_box.timing_box.hours_spin.set_value(duration["hours"])
+        timer_box.timing_box.minutes_spin.set_value(duration["minutes"])
+        timer_box.timing_box.seconds_spin.set_value(duration["seconds"])
 
     def empty_name_dialog(self) -> None:
         """Display a message dialog corresponding to an empty name entry.
@@ -432,10 +489,13 @@ class PresetGrid(Gtk.Grid):
 
             # Reset the entry
             self.entry_preset_name.set_text("")
+
+            # Actualize the list
+            self.refill_preset_list()
         except ValueError:
             msg_not = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
                                         modal=True,
-                                        message_type=Gtk.MessageType.WARNING,
+                                        message_type=Gtk.MessageType.INFO,
                                         text="Already existing name")
             msg_not.format_secondary_text(f"The preset name "
                                           f"{preset_name.capitalize()} already"
@@ -449,7 +509,7 @@ class PresetGrid(Gtk.Grid):
                 or response == Gtk.ResponseType.DELETE_EVENT):
                 msg_not.destroy()
 
-    def set_preset_duration(self, button):
+    def set_preset_duration(self, button) -> None:
         pass
         """
         # Modify existing preset
@@ -473,7 +533,7 @@ class PresetGrid(Gtk.Grid):
                 "does not exist. Please choose an existing name.")
             exit()
         """
-    def rename_preset(self, button):
+    def rename_preset(self, button) -> None:
         pass
         """
         # Rename the corresponding preset and quit
@@ -492,21 +552,63 @@ class PresetGrid(Gtk.Grid):
             exit()
         """
 
-    def delete_preset(self, button):
-        pass
+    def delete_preset(self, button) -> None:
+        """Delete an existing preset.
+
+        Get the selected preset then check whether the preset name does exist,
+        if not raise an error, if yes delete the preset from the preset.json
+        file.
+        Actualize the list and display a confirmation message.
         """
-        # Delete the corresponding preset and quit
+
+        # Get the selected preset name from the list
+        name = self.select_preset_name.get_active_text()
+
+        # Check if it's one the placeholders/default values or None,
+        # return instead
+        if ((name == "Choose a preset")
+            or (name == "No preset created yet")
+            or name == None):
+            return
+
+        # Create the preset model to access to the delete method
         try:
-            preset_to_delete = Preset(args.del_preset)
+            preset_to_delete = Preset(name)
             deleted = preset_to_delete.delete()
 
             if deleted:
-                print(f"Preset deleted: {args.del_preset.capitalize()}")
-                exit()
+                msg_new = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
+                                            modal=True,
+                                            message_type=Gtk.MessageType.INFO,
+                                            text="Existing preset deleted")
+                msg_new.format_secondary_text(f"Preset deleted: "
+                                              f"{name.capitalize()}")
+                msg_new.add_button("OK", Gtk.ResponseType.OK)
+
+                # Close the dialog if OK button is pressed or window is closed
+                response = msg_new.run()
+                if (response == Gtk.ResponseType.OK
+                    or response == Gtk.ResponseType.DELETE_EVENT):
+                    msg_new.destroy()
+
+                # Actualize the list
+                self.refill_preset_list()
         except ValueError:
-            print(f"The preset {args.del_preset.capitalize()} does not exist.")
-            exit()
-        """
+            # Should not happens : the list is built with the JSON file
+            # If it happens, file was probably manipulated manually
+            msg_not = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
+                                        modal=True,
+                                        message_type=Gtk.MessageType.WARNING,
+                                        text="Not existing preset")
+            msg_not.format_secondary_text(f"The preset {name.capitalize()} "
+                                          f"does not exist.")
+            msg_not.add_button("OK", Gtk.ResponseType.OK)
+
+            # Close the dialog if OK button is pressed or window is closed
+            response = msg_not.run()
+            if (response == Gtk.ResponseType.OK
+                or response == Gtk.ResponseType.DELETE_EVENT):
+                msg_not.destroy()
 
 
 
