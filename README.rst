@@ -63,7 +63,8 @@ For me, in short, on Debian :
 - Execute
     ``pip3 install PyGObject``
 
-A requirement.txt is inclued in this repository for the two last steps.
+A requirement.txt is inclued in this repository for the two last steps, you can use it with:
+    ``pip3 install -r requirements.txt ``
 
 Use
 ---
@@ -80,6 +81,8 @@ To use any interface to libminutaria, libminutaria shall be installed. As it is 
     ``python3 -m venv venv``
 - Enter it:
     ``source venv/bin/activate``
+- Install/update PyPA’s build:
+    ``python3 -m pip install --upgrade build``
 - Build from the source:
     ``python3 -m build``
 - Install the ``.whl`` file found in ``dist/``:
