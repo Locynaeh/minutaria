@@ -184,6 +184,8 @@ class Preset:
         Add the virtual preset to the JSON file preset.json if not exist.
     get
         Get the timing from the virtual timer name if exist in preset.json.
+    get_all
+        Get all existing preset names in preset.json.
     delete
         Delete the preset if exist in the JSON file preset.json.
     rename
@@ -307,6 +309,38 @@ class Preset:
             raise ValueError("ValueError: Preset not found")
 
         return timer_values
+
+    def get_all(self) -> list:
+        """Get all existing preset names.
+
+        Check whether preset names do exist, if not raise an exception, if
+        yes return a list containing all names.
+
+        Returns
+        -------
+        preset_names: list[str]
+            Preset names.
+
+        Raises
+        ------
+        ValueError
+            If there is no existing preset.
+        """
+
+        preset_names = []
+
+        # Open the json preset file to search for the existing preset
+        with open(self._preset_file, 'r') as preset_file_read:
+            # Load json presets to be modified
+            json_data = json.load(preset_file_read)
+            for preset in json_data:
+                # Add each existing preset name to the list
+                preset_names.append(preset["name"])
+
+        if preset_names == []:
+            raise ValueError("ValueError: No existing preset.")
+
+        return preset_names
 
     def delete(self) -> bool:
         """Delete an existing preset.
