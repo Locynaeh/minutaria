@@ -319,7 +319,7 @@ class Preset:
         Returns
         -------
         preset_names: list[str]
-            Preset names.
+            Preset names capitalized.
 
         Raises
         ------
@@ -335,7 +335,7 @@ class Preset:
             json_data = json.load(preset_file_read)
             for preset in json_data:
                 # Add each existing preset name to the list
-                preset_names.append(preset["name"])
+                preset_names.append(preset["name"].capitalize())
 
         if preset_names == []:
             raise ValueError("ValueError: No existing preset.")
