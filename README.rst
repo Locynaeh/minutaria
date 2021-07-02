@@ -64,7 +64,7 @@ For me, in short, on Debian :
     ``pip3 install PyGObject``
 
 A requirement.txt is inclued in this repository for the two last steps, you can use it with:
-    ``pip3 install -r requirements.txt ``
+    ``pip3 install -r requirements.txt``
 
 Use
 ---
