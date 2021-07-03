@@ -22,13 +22,17 @@ from time import sleep
 from libminutaria import Timer, Preset, logger
 import gi
 gi.require_version("Gtk", "3.0")
+gi.require_version('Notify', '0.7')
 from gi.repository import Gtk
+from gi.repository import Notify
 
 
 class MainWindow(Gtk.Window):
     """Main windows contaning all the containers of the application."""
     def __init__(self):
         Gtk.Window.__init__(self, title="minutaria", resizable=False)
+
+        Notify.init("minutaria")
 
         self.app_box = AppBox()
         self.add(self.app_box)
@@ -177,6 +181,11 @@ class TimerBox(Gtk.Box):
             if self.counter:
                 # Timer reached 00:00:00 so print 3 "GONG !"
                 label.set_label("GONG ! GONG ! GONG !")
+
+                # Display a notification
+                notification = Notify.Notification.new("minutaria",
+                                                       "Elapsed time")
+                notification.show()
 
                 # Set state to "stopped" since the timer ended
                 self.state = 0
