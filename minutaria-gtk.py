@@ -321,7 +321,8 @@ class PresetGrid(Gtk.Grid):
         # Set new duration
         self.set_button = Gtk.Button(label="Set timing")
         self.set_button.connect('clicked',
-                                self.set_preset_duration)
+                                self.set_preset_duration,
+                                self.timer_box_access)
         self.attach(self.set_button, 1, 3, 1, 1)
 
         # Rename
@@ -363,6 +364,10 @@ class PresetGrid(Gtk.Grid):
 
         try:
             all_preset_names = new_fake_preset.get_all()
+
+            # Sort the names alphabetically
+            all_preset_names.sort()
+
             # Add all preset names to the preset list
             for preset in all_preset_names:
                 self.select_preset_name.append_text(preset)
@@ -401,25 +406,65 @@ class PresetGrid(Gtk.Grid):
         timer_box.timing_box.minutes_spin.set_value(duration["minutes"])
         timer_box.timing_box.seconds_spin.set_value(duration["seconds"])
 
-    def empty_name_dialog(self) -> None:
-        """Display a message dialog corresponding to an empty name entry.
+    def warning_dialog(self, primary_text, secondary_text) -> None:
+        """Display a warning message dialog.
 
         Create a warning message dialog with a corresponding title and text.
         Add an "OK" button to close the dialog. Manage in the same way a close
         action on the dialog by the user.
         """
-        empty_name = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
+        msg_dialog = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
                                        modal=True,
                                        message_type=Gtk.MessageType.WARNING,
-                                       text="No name entered")
-        empty_name.format_secondary_text("Please enter a name")
-        empty_name.add_button("OK", Gtk.ResponseType.OK)
+                                       text=primary_text)
+        msg_dialog.format_secondary_text(secondary_text)
+        msg_dialog.add_button("OK", Gtk.ResponseType.OK)
 
         # Close the dialog if OK button is pressed or window is closed
-        response = empty_name.run()
+        response = msg_dialog.run()
         if (response == Gtk.ResponseType.OK
             or response == Gtk.ResponseType.DELETE_EVENT):
-            empty_name.destroy()
+            msg_dialog.destroy()
+
+    def error_dialog(self, primary_text, secondary_text) -> None:
+        """Display an error message dialog.
+
+        Create an error message dialog with a corresponding title and text.
+        Add an "OK" button to close the dialog. Manage in the same way a close
+        action on the dialog by the user.
+        """
+        msg_dialog = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
+                                       modal=True,
+                                       message_type=Gtk.MessageType.ERROR,
+                                       text=primary_text)
+        msg_dialog.format_secondary_text(secondary_text)
+        msg_dialog.add_button("OK", Gtk.ResponseType.OK)
+
+        # Close the dialog if OK button is pressed or window is closed
+        response = msg_dialog.run()
+        if (response == Gtk.ResponseType.OK
+            or response == Gtk.ResponseType.DELETE_EVENT):
+            msg_dialog.destroy()
+
+    def info_dialog(self, primary_text, secondary_text) -> None:
+        """Display an info message dialog.
+
+        Create an info message dialog with a corresponding title and text.
+        Add an "OK" button to close the dialog. Manage in the same way a close
+        action on the dialog by the user.
+        """
+        msg_dialog = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
+                                       modal=True,
+                                       message_type=Gtk.MessageType.INFO,
+                                       text=primary_text)
+        msg_dialog.format_secondary_text(secondary_text)
+        msg_dialog.add_button("OK", Gtk.ResponseType.OK)
+
+        # Close the dialog if OK button is pressed or window is closed
+        response = msg_dialog.run()
+        if (response == Gtk.ResponseType.OK
+            or response == Gtk.ResponseType.DELETE_EVENT):
+            msg_dialog.destroy()
 
     def get_preset_entry(self):
         """The content of the entry.
@@ -448,7 +493,8 @@ class PresetGrid(Gtk.Grid):
 
         # Check if it's empty and handle it
         if preset_name == "":
-            self.empty_name_dialog()
+            self.warning_dialog("No name entered",
+                                "Please enter a name")
             return
 
         # Get the selected timing
@@ -473,19 +519,11 @@ class PresetGrid(Gtk.Grid):
                                             minutes=+selection["timer_min"],
                                             seconds=+selection["timer_secs"])
 
-            msg_new = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
-                                        modal=True,
-                                        message_type=Gtk.MessageType.WARNING,
-                                        text="New preset added")
-            msg_new.format_secondary_text(f"{preset_name.capitalize()} - "
-                                          f"{str(new_preset_duration)}")
-            msg_new.add_button("OK", Gtk.ResponseType.OK)
+            secondary_text = (f"{preset_name.capitalize()} - "
+                              f"{str(new_preset_duration)}")
 
-            # Close the dialog if OK button is pressed or window is closed
-            response = msg_new.run()
-            if (response == Gtk.ResponseType.OK
-                or response == Gtk.ResponseType.DELETE_EVENT):
-                msg_new.destroy()
+            self.info_dialog("New preset added",
+                             secondary_text)
 
             # Reset the entry
             self.entry_preset_name.set_text("")
@@ -493,64 +531,133 @@ class PresetGrid(Gtk.Grid):
             # Actualize the list
             self.refill_preset_list()
         except ValueError:
-            msg_not = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
-                                        modal=True,
-                                        message_type=Gtk.MessageType.INFO,
-                                        text="Already existing name")
-            msg_not.format_secondary_text(f"The preset name "
-                                          f"{preset_name.capitalize()} already"
-                                          f" exist. Please choose an "
-                                          f"other name.")
-            msg_not.add_button("OK", Gtk.ResponseType.OK)
+            secondary_text = (f"The preset name {preset_name.capitalize()} "
+                              f"already exist. Please choose an other name.")
 
-            # Close the dialog if OK button is pressed or window is closed
-            response = msg_not.run()
-            if (response == Gtk.ResponseType.OK
-                or response == Gtk.ResponseType.DELETE_EVENT):
-                msg_not.destroy()
+            self.error_dialog("Already existing name",
+                              secondary_text)
 
-    def set_preset_duration(self, button) -> None:
-        pass
+    def set_preset_duration(self, button, timer_box_access) -> None:
+        """Set duration to an existing preset.
+
+        Get the selected preset then check whether a new duration superior to 0
+        is entered, if yes set the new duration the preset from the preset.json
+        file and display a confirmation message.
         """
+
+        # Get the selected preset name from the list
+        preset_name = self.select_preset_name.get_active_text()
+
+        # Check if it's empty and handle it
+        if preset_name == "":
+            self.warning_dialog("No name entered",
+                                "Please enter a name")
+            return
+
+        # Check if it's one the placeholders/default values or None,
+        # return instead
+        if ((preset_name == "Choose a preset")
+            or (preset_name == "No preset created yet")
+            or (preset_name == None)):
+            self.info_dialog("No preset selected",
+                             f"Please select a preset to set duration.")
+            return
+
+        # Get the selected timing
+        selection = timer_box_access.timing_box.get_entry()
+        #print(selection)
+        if (selection["timer_hours"] == 0
+            and selection["timer_min"] == 0
+            and selection["timer_secs"] == 0):
+            timer_box_access.zero_timing_dialog()
+            return
+
         # Modify existing preset
         # Modify the corresponding preset and quit
         try:
-            preset_to_modify = Preset(args.modify_preset_duration)
-            modified = preset_to_modify.set_duration(timer_values["timer_hours"],
-                                                    timer_values["timer_min"],
-                                                    timer_values["timer_secs"])
-            modified_duration = timedelta(hours=+timer_values["timer_hours"],
-                                        minutes=+timer_values["timer_min"],
-                                        seconds=+timer_values["timer_secs"])
+            preset_to_modify = Preset(preset_name)
+            modified = preset_to_modify.set_duration(selection["timer_hours"],
+                                                    selection["timer_min"],
+                                                    selection["timer_secs"])
+            modified_duration = timedelta(hours=+selection["timer_hours"],
+                                        minutes=+selection["timer_min"],
+                                        seconds=+selection["timer_secs"])
 
             if modified:
-                print("New preset duration: "
-                    f"{args.modify_preset_duration.capitalize()}"
-                    f" - {str(modified_duration)}")
-                exit()
+                self.info_dialog("Preset duration changed",
+                                 f"New preset duration: "
+                                 f"{preset_name.capitalize()} - "
+                                 f"{str(modified_duration)}")
         except ValueError:
-            print(f"The preset {args.modify_preset_duration.capitalize()} "
-                "does not exist. Please choose an existing name.")
-            exit()
-        """
+            # Should not happens : the list is built with the JSON file
+            # If it happens, file was probably manipulated manually
+            secondary_text = (f"The preset {preset_name.capitalize()} does not"
+                              f" exist. Please choose an existing name.")
+
+            self.error_dialog("Not existing preset",
+                              secondary_text)
+
     def rename_preset(self, button) -> None:
-        pass
+        """Rename an existing preset.
+
+        Get the selected preset then check whether the preset new name in the
+        entry does exist, if not raise an error, if yes rename the preset
+        from the preset.json file.
+        Actualize the list and display a confirmation message.
         """
+
+        # Get the selected preset name from the list
+        preset_name = self.select_preset_name.get_active_text()
+
+        # Check if it's empty and handle it
+        if preset_name == "":
+            self.warning_dialog("No name entered",
+                                "Please enter a name")
+            return
+
+        # Check if it's one the placeholders/default values or None,
+        # return instead
+        if ((preset_name == "Choose a preset")
+            or (preset_name == "No preset created yet")
+            or (preset_name == None)):
+            self.info_dialog("No preset selected",
+                             f"Please select a preset to rename.")
+            return
+
+        # Get the user's choosen name
+        new_name = self.get_preset_entry()
+
+        # Check if it's empty and handle it
+        if new_name == "":
+            self.warning_dialog("No new name entered",
+                                f"Please enter a new name to rename the "
+                                f"selected preset")
+            return
+
         # Rename the corresponding preset and quit
         try:
-            preset_to_rename = Preset(args.rename_preset[0])
-            renamed = preset_to_rename.rename(args.rename_preset[1])
+            preset_to_rename = Preset(preset_name)
+            renamed = preset_to_rename.rename(new_name)
 
             if renamed:
-                print(f"Preset {args.rename_preset[0].capitalize()} renamed: "
-                    f"{args.rename_preset[1].capitalize()}")
-                exit()
+                self.info_dialog("Existing preset renamed",
+                                 f"Preset {preset_name.capitalize()} renamed:"
+                                 f" {new_name.capitalize()}")
+
+            # Reset the entry
+            self.entry_preset_name.set_text("")
+
+            # Actualize the list
+            self.refill_preset_list()
         except ValueError:
-            print(f"The preset {args.rename_preset[0].capitalize()} "
-                f"does not exist or the new name "
-                f"{args.rename_preset[1].capitalize()} is not available.")
-            exit()
-        """
+            # Should not happens : the list is built with the JSON file
+            # If it happens, file was probably manipulated manually
+            secondary_text = (f"The preset {preset_name.capitalize()} does not"
+                              f" exist or the new name {new_name.capitalize()}"
+                              f" is not available.")
+
+            self.error_dialog("Not existing preset",
+                              secondary_text)
 
     def delete_preset(self, button) -> None:
         """Delete an existing preset.
@@ -568,7 +675,9 @@ class PresetGrid(Gtk.Grid):
         # return instead
         if ((name == "Choose a preset")
             or (name == "No preset created yet")
-            or name == None):
+            or (name == None)):
+            self.info_dialog("No preset selected",
+                             f"Please select a preset to delete.")
             return
 
         # Create the preset model to access to the delete method
@@ -577,38 +686,19 @@ class PresetGrid(Gtk.Grid):
             deleted = preset_to_delete.delete()
 
             if deleted:
-                msg_new = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
-                                            modal=True,
-                                            message_type=Gtk.MessageType.INFO,
-                                            text="Existing preset deleted")
-                msg_new.format_secondary_text(f"Preset deleted: "
-                                              f"{name.capitalize()}")
-                msg_new.add_button("OK", Gtk.ResponseType.OK)
+                self.info_dialog("Existing preset deleted",
+                                 f"Preset deleted: {name.capitalize()}")
 
-                # Close the dialog if OK button is pressed or window is closed
-                response = msg_new.run()
-                if (response == Gtk.ResponseType.OK
-                    or response == Gtk.ResponseType.DELETE_EVENT):
-                    msg_new.destroy()
-
-                # Actualize the list
-                self.refill_preset_list()
+            # Actualize the list
+            self.refill_preset_list()
         except ValueError:
             # Should not happens : the list is built with the JSON file
             # If it happens, file was probably manipulated manually
-            msg_not = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
-                                        modal=True,
-                                        message_type=Gtk.MessageType.WARNING,
-                                        text="Not existing preset")
-            msg_not.format_secondary_text(f"The preset {name.capitalize()} "
-                                          f"does not exist.")
-            msg_not.add_button("OK", Gtk.ResponseType.OK)
+            secondary_text = (f"The preset {name.capitalize()} does not"
+                              f" exist. Please choose an existing name.")
 
-            # Close the dialog if OK button is pressed or window is closed
-            response = msg_not.run()
-            if (response == Gtk.ResponseType.OK
-                or response == Gtk.ResponseType.DELETE_EVENT):
-                msg_not.destroy()
+            self.error_dialog("Not existing preset",
+                              secondary_text)
 
 
 
