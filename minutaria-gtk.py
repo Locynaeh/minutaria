@@ -20,11 +20,13 @@ logging.basicConfig(level=logging.DEBUG)
 from datetime import timedelta
 from time import sleep
 from libminutaria import Timer, Preset, logger
+from just_playback import Playback
 import gi
 gi.require_version("Gtk", "3.0")
 gi.require_version('Notify', '0.7')
 from gi.repository import Gtk
 from gi.repository import Notify
+
 
 
 class MainWindow(Gtk.ApplicationWindow):
@@ -101,6 +103,8 @@ class TimerBox(Gtk.Box):
         self.state = 0  # 0: stopped, 1: running, 2: paused
         self.timer = Timer(hours=0, minutes=0, seconds=0)
         self.counter = False
+        self.alarm = Playback()
+        self.alarm_sound = "assets/gowlermusic__gong-hit.ogg"
 
     def zero_timing_dialog(self) -> None:
         """Display a message dialog corresponding to an empty timing selection.
@@ -135,8 +139,8 @@ class TimerBox(Gtk.Box):
            according to the user selection
          - if "running", set it to "paused"
          - if "paused", set it to "running" and actualize the existing timer.
-        Finally manage the timer to run it until 00:00:00 and print 3 times a
-        "GONG !".
+        Finally manage the timer to run it until 00:00:00 and print "GONG" and
+        play a corresponding alarm sound.
         Checking state in the process, break if "paused".
         A the end, set the state to "stopped".
         """
@@ -182,8 +186,8 @@ class TimerBox(Gtk.Box):
                     break
 
             if self.counter:
-                # Timer reached 00:00:00 so print 3 "GONG !"
-                label.set_label("GONG ! GONG ! GONG !")
+                # Timer reached 00:00:00 so print "GONG"
+                label.set_label("GONG")
 
                 # Display a notification
                 notification = Notify.Notification.new("minutaria",
@@ -193,6 +197,10 @@ class TimerBox(Gtk.Box):
                 # Set state to "stopped" since the timer ended
                 self.state = 0
 
+                # Play an alarm sound
+                self.alarm.load_file(self.alarm_sound)
+                self.alarm.play()
+
     def reset_stop_timer(self, button, label, timing_box) -> None:
         """Handle reset/stop the timer.
 
@@ -201,6 +209,9 @@ class TimerBox(Gtk.Box):
         """
         self.state = 0
         selection = timing_box.get_entry()
+
+        # Stop playing alarm sound
+        self.alarm.stop()
 
         # Printable default duration
         printable_selection = timedelta(hours=+selection["timer_hours"],
