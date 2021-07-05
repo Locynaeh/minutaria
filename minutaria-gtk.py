@@ -27,12 +27,15 @@ from gi.repository import Gtk
 from gi.repository import Notify
 
 
-class MainWindow(Gtk.Window):
+class MainWindow(Gtk.ApplicationWindow):
     """Main windows contaning all the containers of the application."""
     def __init__(self):
-        Gtk.Window.__init__(self, title="minutaria", resizable=False)
+        Gtk.ApplicationWindow.__init__(self, title="minutaria", resizable=False)
 
+        # Initialize the library by supplying an application title
         Notify.init("minutaria")
+
+        #self.set_icon_from_file("web.png")
 
         self.app_box = AppBox()
         self.add(self.app_box)
@@ -184,7 +187,7 @@ class TimerBox(Gtk.Box):
 
                 # Display a notification
                 notification = Notify.Notification.new("minutaria",
-                                                       "Elapsed time")
+                                                       "Time up")
                 notification.show()
 
                 # Set state to "stopped" since the timer ended
@@ -222,11 +225,71 @@ class IntroBox(Gtk.Box):
         self.instruction_label.set_label("Please enter a remaining time")
         self.instruction_label.set_xalign(1)  # align to the center
 
+        self.menu_item_param = Gtk.MenuItem(label="Parameters")
+        self.menu_item_param.connect("activate", self.param_dialog)
+        self.menu_item_about = Gtk.MenuItem(label="About")
+        self.menu_item_about.connect("activate", self.about_dialog)
+
+        self.menu = Gtk.Menu()
+        self.menu.append(self.menu_item_param)
+        self.menu.append(self.menu_item_about)
+        self.menu.show_all()
+
         self.param = Gtk.MenuButton(halign='end')
+        self.param.set_popup(self.menu)
         self.param.set_direction(Gtk.ArrowType(4))
 
         self.pack_start(self.instruction_label, True, True, 0)
         self.pack_start(self.param, True, True, 0)
+
+    def param_dialog(self, item):
+        pass
+
+    def about_dialog(self, item):
+        """Display an about dialog.
+
+        Create an about dialog with a corresponding information.
+        Manage a close action on the dialog by the user.
+        """
+        about_dialog = Gtk.AboutDialog(program_name="minutaria",
+                                       version="1.0")
+        text = (f"MIT License \n\n"
+                f"Copyright (c) 2021 Locynaeh\n\n"
+                f"Permission is hereby granted, free of charge, to any\n "
+                f"person obtaining a copy of this software and associated\n "
+                f"documentation files (the \"Software\"), to deal in the\n "
+                f"Software without restriction, including without\n "
+                f"limitation the rights to use, copy, modify, merge,\n "
+                f"publish, distribute, sublicense, and/or sell copies of\n "
+                f"the Software, and to permit persons to whom the Software\n "
+                f"is furnished to do so, subject to the following\n "
+                f"conditions:\n"
+                f"The above copyright notice and this permission notice\n "
+                f"(including the next paragraph) shall be included in all\n "
+                f"copies or substantial portions of the Software.\n\n"
+                f"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF\n "
+                f"ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED\n "
+                f"TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A\n "
+                f"PARTICULAR PURPOSE AND NONINFRINGEMENT.\n"
+                f"IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE\n "
+                f"LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\n "
+                f"IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\n "
+                f"FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE\n "
+                f"USE OR OTHER DEALINGS IN THE SOFTWARE.")
+        about_dialog.set_license(text)
+        comment = (f"minutaria is a basic educational Python timer.\n\n"
+                  f"The project is educational, it aims to teach myself "
+                  f"programming, python programming, python's stdlib, "
+                  f"tools (pdb, venv, mypy...) and ecosystem, development "
+                  f"best pratices, git and some software testing libraries "
+                  f"or frameworks.\n\n"
+                  f"Created by Locynaeh under the MIT/Expat License.")
+        about_dialog.set_comments(comment)
+
+        # Close the dialog if OK button is pressed or window is closed
+        response = about_dialog.run()
+        if response == Gtk.ResponseType.DELETE_EVENT:
+            about_dialog.destroy()
 
 class TimingBox(Gtk.Box):
     """Container to all the necessary elements to select a timing HH.MM.SS."""
