@@ -96,4 +96,5 @@ License
 minutaria is licensed under `the MIT/Expat License
 <https://spdx.org/licenses/MIT.html>`_. See LICENSE file for details.
 
+For the assets, see the file ``attribution.rst`` in the ``assets/`` directory.
 
