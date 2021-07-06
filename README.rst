@@ -27,18 +27,13 @@ Done
 - Minimal log system
 - Unit tests with unittest and pytest without test run
 - packaging
-
-Expected
---------
-
 - Usable with a GTK GUI and so:
-    - theming light/dark
     - reset the timer
     - pause/continue the timer
     - add/use/manage presets
-    - alarm period
-    - alarm volume
     - play a sound at 00:00:00.0
+    - manage alarm volum
+    - display an "About" window.
 
 Dependencies
 ------------
@@ -48,7 +43,9 @@ Nothing except Python 3 and modules from the standard library for the lib and th
 - *datetime*, *argparse*, *logging* and *json* for the lib
 - *curses*, *datetime*, *logging* and *os* for the ncurses interface.
 
-For the GTK GUI, please follow `the guide <https://pygobject.readthedocs.io/en/latest/getting_started.html#gettingstarted>`_.
+The GTK GUI naturally use GTK and also use cheofusi's `just-playback library <https://github.com/cheofusi/just_playback>`_ for playing sound, licensed under the MIT License.
+
+For the GTK GUI, please follow `the guide <https://pygobject.readthedocs.io/en/latest/getting_started.html#gettingstarted>`_ to install it.
 
 For me, in short, on Debian :
 
@@ -62,8 +59,10 @@ For me, in short, on Debian :
     ``pip3 install pycairo``
 - Execute
     ``pip3 install PyGObject``
+- For just-playback:
+    ``pip3 install just_playback``
 
-A requirement.txt is inclued in this repository for the two last steps, you can use it with:
+A requirement.txt is inclued in this repository for the three last steps, you can use it with:
     ``pip3 install -r requirements.txt``
 
 Use
