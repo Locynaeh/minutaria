@@ -4,7 +4,6 @@ cffi==1.14.5
 importlib-metadata==4.5.0
 iniconfig==1.1.1
 just-playback==0.1.3
-libminutaria==1.0
 packaging==20.9
 pep517==0.10.0
 pkg-resources==0.0.0
