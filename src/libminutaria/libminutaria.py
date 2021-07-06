@@ -310,7 +310,8 @@ class Preset:
 
         return timer_values
 
-    def get_all(self) -> list:
+    @classmethod
+    def get_all(cls, preset_file='preset.json') -> list:
         """Get all existing preset names.
 
         Check whether preset names do exist, if not raise an exception, if
@@ -329,16 +330,20 @@ class Preset:
 
         preset_names = []
 
-        # Open the json preset file to search for the existing preset
-        with open(self._preset_file, 'r') as preset_file_read:
-            # Load json presets to be modified
-            json_data = json.load(preset_file_read)
-            for preset in json_data:
-                # Add each existing preset name to the list
-                preset_names.append(preset["name"].capitalize())
+        try:
+            # Open the json preset file to search for the existing preset
+            with open(preset_file, 'r') as preset_file_read:
+                # Load json presets to be modified
+                json_data = json.load(preset_file_read)
+                for preset in json_data:
+                    # Add each existing preset name to the list
+                    preset_names.append(preset["name"].capitalize())
 
-        if preset_names == []:
-            raise ValueError("ValueError: No existing preset.")
+            if preset_names == []:
+                raise ValueError("ValueError: No existing preset.")
+
+        except FileNotFoundError:
+            pass
 
         return preset_names
 
