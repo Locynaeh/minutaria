@@ -178,14 +178,17 @@ class Preset:
     _seconds: int
         The seconds quantity of the timer preset
 
+    Class methods
+    -------------
+    get_all
+        Get all existing preset names in preset.json.
+
     Public methods
     --------------
     add
         Add the virtual preset to the JSON file preset.json if not exist.
     get
         Get the timing from the virtual timer name if exist in preset.json.
-    get_all
-        Get all existing preset names in preset.json.
     delete
         Delete the preset if exist in the JSON file preset.json.
     rename
