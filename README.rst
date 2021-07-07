@@ -5,6 +5,8 @@ minutaria is a basic educational Python timer.
 
 The project is educational, it aims to teach myself programming, python programming, python's stdlib, tools (pdb, venv, mypy...) and ecosystem, development best pratices, git and some software testing libraries or frameworks.
 
+.. image:: minutaria.png
+
 The project is separed in 3 parts:
 
 - a module as a library
