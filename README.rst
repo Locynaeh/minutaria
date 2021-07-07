@@ -76,6 +76,18 @@ minutaria-cli.py contains a fully usable command line interface to libminutaria.
 
 minutaria-curses.py contains the basic ncurses interface and so shall be launched via command line. It offers a start/pause/continue/relaunch/quit functionality and is fully usable with CLI arguments identically to minutaria-cli.py. This user interface shall only be use on Unix system as the Windows version isn't included in the standard library, the script contains a WINDOWS_CHECK parameter for this purpose. Nervertheless it should be usable with WSL (not tested).
 
+minutaria-gtk.py contains the GTK interface (see the picture) to libminutaria. It offers the same functionalities plus alarm sound (sound configurable) at time up :
+
+- To add a preset, enter a name and select a duration before pressing the button "Add".
+- To delete a preset, select it from the list of existing preset before pressing the "Delete" button.
+- To rename a preset, select it from the list and enter a new name before pressing the "Rename" button.
+- To set a new duration to a preset, select it from the list and select a duration before pressing the "Set timing" button.
+- To launch a timer, select a duration with the spin button or select an existing preset from the list then press "Start/Pause".
+- To pause, press "Start/Pause" again.
+- "Reset/Stop" is used to stop the alarm, stop the timer and reset it.
+- The volume of the alarm can be managed by the volume button (scale).
+- An "About" dialog is available from the option/menu button.
+
 To use any interface to libminutaria, libminutaria shall be installed. As it is an educational project, do it in a virtual environment :
 
 - Create virtual environment if not already done:
