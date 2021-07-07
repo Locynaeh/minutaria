@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 """
-libminutaria-gtk
-================
+minutaria-gtk
+=============
 
 :Authors:
     Locynaeh
@@ -13,39 +13,108 @@ GTK Graphical User Interface (GUI)) based on the libminutaria library.
 
 This script is also directly usable in a terminal. Use -h/--help arguments
 for more information on how to use the CLI provided.
+
+Classes
+-------
+MainWindow
+    The main window of the application. Contains all other elements.
+SeparatorBox
+    A configurable separator to be used between some containers.
+AppBox
+    A container to the TimerBox and PresetGrid containers.
+TimerBox
+    The container to all the timer management elements.
+IntroBox
+    A container to the instructions and the settings menu.
+    Displayed inside TimerBox.
+TimingBox
+    A container to all the necessary elements to select a timing HH.MM.SS.
+    Displayed inside TimerBox.
+PresetGrid
+    A container to all the preset management elements.
 """
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
 from datetime import timedelta
-from time import sleep
 from libminutaria import Timer, Preset, logger
 from just_playback import Playback
 import gi
 gi.require_version("Gtk", "3.0")
-gi.require_version('Notify', '0.7')
-from gi.repository import Gtk
-from gi.repository import Notify
-
+gi.require_version("Notify", "0.7")
+from gi.repository import Gtk, Notify, GdkPixbuf
 
 
 class MainWindow(Gtk.ApplicationWindow):
-    """Main windows contaning all the containers of the application."""
+    """
+    Main windows contaning all the containers of the application.
+
+    Attributes
+    ----------
+    app_box: Gtk.Box
+        A container to the TimerBox and PresetGrid containers
+    """
+
     def __init__(self):
+        """Initialize a Gtk.ApplicationWindow.
+
+        Initialize and add an AppBox instance, set the application icon, title,
+        if the windows is resizable and initialize the notification system.
+        """
+
         Gtk.ApplicationWindow.__init__(self, title="minutaria", resizable=False)
 
         # Initialize the library by supplying an application title
         Notify.init("minutaria")
 
-        #self.set_icon_from_file("web.png")
+        self.set_icon_from_file("assets/porcmouth.png")
 
         self.app_box = AppBox()
         self.add(self.app_box)
 
 
+class SeparatorBox(Gtk.Box):
+    """
+    Container to an horizontal (default) or vertical separator.
+
+    Attributes
+    ----------
+    separator: Gtk.Separator
+        An instance of a Gtk.Separator.
+    """
+
+    def __init__(self, orientation=Gtk.Orientation.HORIZONTAL):
+        """Initialize a Gtk.Box with a separator.
+
+        Parameters
+        ----------
+        orientation: Gtk.Orientation, optional
+            The orientation of the separator, default
+            Gtk.Orientation.HORIZONTAL when optionnal.
+        """
+
+        Gtk.Box.__init__(self)
+        self.separator = Gtk.Separator(orientation=orientation)
+        self.pack_start(self.separator, True, True, 0)
+
+
 class AppBox(Gtk.Box):
-    """Container to the timer part and the preset parts."""
+    """
+    Container to the timer part and the preset parts.
+
+    Attributes
+    ----------
+    timer_box: TimerBox
+        An instance of a TimerBox.
+    preset_grid: PresetGrid
+        An instance of a PresetGrid with access to the TimerBox instance.
+    """
+
     def __init__(self):
+        """Initialize a Gtk.Box with an instance of TimerBox and an instance
+        of PresetGrid, giving to the last access to the first.
+        """
+
         Gtk.Box.__init__(self,
                          orientation=Gtk.Orientation.VERTICAL,
                          spacing=6,
@@ -64,11 +133,64 @@ class AppBox(Gtk.Box):
 
 
 class TimerBox(Gtk.Box):
-    """Container to all the timer management elements."""
+    """
+    Container to all the timer management elements.
+
+    Attributes
+    ----------
+    state: int
+        The state of the timer.
+        0: stopped, 1: running, 2: paused
+    timer: libminutaria.Timer
+        An instance of libminutaria's Timer.
+    counter: bool
+        The bool counter used to determine if the timer's duration is reached.
+    alarm: just_playback.Playback
+        The Playback instance to play an alarm sound at the end of a timer.
+    alarm_sound: str
+        The path to the sound to be used as alarm.
+    intro_box: IntroBox
+        An instance of an IntroBox.
+    intro_separator: SeparatorBox
+        An instance of an SeparatorBox.
+    timing_box: TimingBox
+        An instance of a SeparatorBox.
+    timing_separator: SeparatorBox
+        An instance of an SeparatorBox.
+    timing_print: Gtk.Label
+        The remaining duration of the current timer or word displayed at
+        the end of a timer.
+    start_pause_button: Gtk.Button
+        The Start/Pause button of the timer.
+    reset_stop_button: Gtk.Button
+        The Reset/Stop button of the timer.
+    end_timer_separator: SeparatorBox
+        An instance of an SeparatorBox.
+
+    Methods
+    -------
+    reset_stop_timer
+        Handle reset/stop the timer and timer events like alarm.
+    start_selected_timer
+        Handle start/pause/restart a choosen timer and its state.
+    zero_timing_dialog
+        Display a message dialog corresponding to an empty timing selection.
+    """
+
     def __init__(self):
+        """Initialize a Gtk.Box with the timer elements."""
+
         Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=6)
 
-        self.intro_box = IntroBox()
+        self.state = 0  # 0: stopped, 1: running, 2: paused
+        self.timer = Timer(hours=0, minutes=0, seconds=0)
+        self.counter = False
+        self.alarm = Playback()
+        self.alarm.set_volume(0.8)
+        self.alarm_sound = "assets/gowlermusic__gong-hit.ogg"
+
+
+        self.intro_box = IntroBox(self.alarm)
         self.pack_start(self.intro_box, False, True, 0)
 
         self.intro_separator = SeparatorBox()
@@ -80,10 +202,13 @@ class TimerBox(Gtk.Box):
         self.timing_separator = SeparatorBox()
         self.pack_start(self.timing_separator, False, True, 0)
 
-        self.timing_print = Gtk.Label(label="0:00:00")
+        self.timing_print = Gtk.Label()
+        self.timing_print.set_markup(f"<span background='black' "
+                                     f"foreground='white' size='60000' >"
+                                     f"0:00:00</span>")
         self.pack_start(self.timing_print, False, True, 10)
 
-        self.start_pause_button = Gtk.Button(label="Start /Pause")
+        self.start_pause_button = Gtk.Button(label="Start / Pause")
         self.start_pause_button.connect('clicked',
                                         self.start_selected_timer,
                                         self.timing_print,
@@ -92,19 +217,13 @@ class TimerBox(Gtk.Box):
 
         self.reset_stop_button = Gtk.Button(label="Reset / Stop")
         self.reset_stop_button.connect('clicked',
-                                        self.reset_stop_timer,
-                                        self.timing_print,
-                                        self.timing_box)
+                                       self.reset_stop_timer,
+                                       self.timing_print,
+                                       self.timing_box)
         self.pack_start(self.reset_stop_button, False, True, 0)
 
         self.end_timer_separator = SeparatorBox()
         self.pack_start(self.end_timer_separator, False, True, 0)
-
-        self.state = 0  # 0: stopped, 1: running, 2: paused
-        self.timer = Timer(hours=0, minutes=0, seconds=0)
-        self.counter = False
-        self.alarm = Playback()
-        self.alarm_sound = "assets/gowlermusic__gong-hit.ogg"
 
     def zero_timing_dialog(self) -> None:
         """Display a message dialog corresponding to an empty timing selection.
@@ -113,6 +232,7 @@ class TimerBox(Gtk.Box):
         Add an "OK" button to close the dialog. Manage in the same way a close
         action on the dialog by the user.
         """
+
         # Create and display a message dialog
         # to handle the no duration selection
         no_duration = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
@@ -130,20 +250,22 @@ class TimerBox(Gtk.Box):
             no_duration.destroy()
 
     def start_selected_timer(self, button, label, timing_box) -> None:
-        """Handle start/pause/restart a choosen timer.
+        """Handle start/pause/restart a choosen timer and its state.
 
         Get the selected timing by the user on the spinboxes.
-        Manage timing == 0 to display a message dialog in case of.
+        Manage timing if no duration choosen to display a message dialog
+        in case of.
         Then check the state :
          - if "stopped", set it to "running" and initialize the timer
            according to the user selection
          - if "running", set it to "paused"
          - if "paused", set it to "running" and actualize the existing timer.
-        Finally manage the timer to run it until 00:00:00 and print "GONG" and
-        play a corresponding alarm sound.
+        Finally manage the timer to run it until 00:00:00, print "GONG",
+        display a notification and play a corresponding alarm sound.
         Checking state in the process, break if "paused".
-        A the end, set the state to "stopped".
+        At the end, set the state to "stopped".
         """
+
         # Get the selected timing
         selection = timing_box.get_entry()
 
@@ -177,7 +299,9 @@ class TimerBox(Gtk.Box):
             # Check remaining time along the timer and print it
             self.counter = self.timer.is_timing_reached()
             while self.counter is False:
-                label.set_label(self.timer.get_timing[:9])
+                label.set_markup(f"<span background='black' "
+                                 f"foreground='white' size='60000' >"
+                                 f"{self.timer.get_timing[:9]}</span>")
                 while Gtk.events_pending():
                     Gtk.main_iteration()
                 self.counter = self.timer.is_timing_reached()
@@ -187,7 +311,9 @@ class TimerBox(Gtk.Box):
 
             if self.counter:
                 # Timer reached 00:00:00 so print "GONG"
-                label.set_label("GONG")
+                label.set_markup(f"<span background='black' "
+                                 f"foreground='white' size='60000' >"
+                                 f"GONG</span>")
 
                 # Display a notification
                 notification = Notify.Notification.new("minutaria",
@@ -202,11 +328,13 @@ class TimerBox(Gtk.Box):
                 self.alarm.play()
 
     def reset_stop_timer(self, button, label, timing_box) -> None:
-        """Handle reset/stop the timer.
+        """Handle reset/stop the timer and timer events.
 
         Set the state of the timer to "stopped" (0) and set the timer label
         to the selected value by the user on the spinboxes.
+        Stop the alarm played.
         """
+
         self.state = 0
         selection = timing_box.get_entry()
 
@@ -217,32 +345,57 @@ class TimerBox(Gtk.Box):
         printable_selection = timedelta(hours=+selection["timer_hours"],
                                      minutes=+selection["timer_min"],
                                      seconds=+selection["timer_secs"])
-        label.set_label(str(printable_selection))
-
-class SeparatorBox(Gtk.Box):
-    """Container to an horizontal separator."""
-    def __init__(self, orientation=Gtk.Orientation.HORIZONTAL):
-        Gtk.Box.__init__(self)
-        self.orientation = orientation
-        self.separator = Gtk.Separator(orientation=self.orientation)
-        self.pack_start(self.separator, True, True, 0)
+        label.set_markup(f"<span background='black' "
+                         f"foreground='white' size='60000' >"
+                         f"{str(printable_selection)}</span>")
 
 
 class IntroBox(Gtk.Box):
-    """Container to the instructions and the settings menu."""
-    def __init__(self):
+    """
+    Container to the instructions and the settings menu.
+
+    Attributes
+    ----------
+    instruction_label: Gtk.Label
+        The basic instructions to proceed.
+    menu_item_about: Gtk.MenuItem
+        Menu item to access the "About" dialog.
+    menu: Gtk.Menu
+        The Menu base to dispay menu items.
+    param: Gtk.MenuButton
+        The button allowing to access to the menu.
+    volume: Gtk.VolumeButton
+        The volume button used to manage the volume of the alarm.
+    alarm: just_playback.Playback
+        The access to the Playback instance used to play the end timer alarm.
+
+    Methods
+    -------
+    param_volume
+        Set the volume of the alarm.
+    about_dialog
+        Display the "About" dialog and manage its content and behaviour.
+    """
+
+    def __init__(self, alarm_access):
+        """Initialize a Gtk.Box with all the intro part elements.
+
+        Parameters
+        ----------
+        alarm_access: just_playback.Playback
+            An access to the Playback instance used to play the end timer
+            alarm.
+        """
+
         Gtk.Box.__init__(self, spacing=6)
         self.instruction_label = Gtk.Label()
         self.instruction_label.set_label("Please enter a remaining time")
         self.instruction_label.set_xalign(1)  # align to the center
 
-        self.menu_item_param = Gtk.MenuItem(label="Parameters")
-        self.menu_item_param.connect("activate", self.param_dialog)
         self.menu_item_about = Gtk.MenuItem(label="About")
         self.menu_item_about.connect("activate", self.about_dialog)
 
         self.menu = Gtk.Menu()
-        self.menu.append(self.menu_item_param)
         self.menu.append(self.menu_item_about)
         self.menu.show_all()
 
@@ -250,20 +403,44 @@ class IntroBox(Gtk.Box):
         self.param.set_popup(self.menu)
         self.param.set_direction(Gtk.ArrowType(4))
 
+        adjustment_volume = Gtk.Adjustment(value=80,
+                                           lower=0,
+                                           upper=100,
+                                           step_increment=1,
+                                           page_increment=10,
+                                           page_size=0)
+        self.volume = Gtk.VolumeButton(halign='end')
+        self.volume.set_adjustment(adjustment_volume)
+        self.volume.connect("value-changed", self.param_volume)
+
         self.pack_start(self.instruction_label, True, True, 0)
+        self.pack_start(self.volume, True, True, 0)
         self.pack_start(self.param, True, True, 0)
 
-    def param_dialog(self, item):
-        pass
+        self.alarm = alarm_access
 
-    def about_dialog(self, item):
+    def param_volume(self, button, value) -> None:
+        """Set the volume of the alarm
+
+        Set the volume of the alarm according to the scale button manipulated
+        by the user.
+        """
+
+        self.alarm.set_volume(value / 100)
+
+    def about_dialog(self, item) -> None:
         """Display an about dialog.
 
-        Create an about dialog with a corresponding information.
+        Create an about dialog with a corresponding information (logo, version,
+        license, name, informative text).
         Manage a close action on the dialog by the user.
         """
+
         about_dialog = Gtk.AboutDialog(program_name="minutaria",
                                        version="1.0")
+        logo = GdkPixbuf.Pixbuf.new_from_file("assets/porcmouth.png")
+        about_dialog.set_logo(logo)
+
         text = (f"MIT License \n\n"
                 f"Copyright (c) 2021 Locynaeh\n\n"
                 f"Permission is hereby granted, free of charge, to any\n "
@@ -297,14 +474,43 @@ class IntroBox(Gtk.Box):
                   f"Created by Locynaeh under the MIT/Expat License.")
         about_dialog.set_comments(comment)
 
-        # Close the dialog if OK button is pressed or window is closed
+        # Close the dialog if close button pressed or window closed
         response = about_dialog.run()
         if response == Gtk.ResponseType.DELETE_EVENT:
             about_dialog.destroy()
 
 class TimingBox(Gtk.Box):
-    """Container to all the necessary elements to select a timing HH.MM.SS."""
+    """
+    Container to all the necessary elements to select a timing HH.MM.SS.
+
+    Attributes
+    ----------
+    hour_label: Gtk.Label
+        The label of the spin button dedicated to select the number of hours.
+    hours_spin: Gtk.SpinButton
+        The spin button dedicated to select hours number.
+    hm_separator: SeparatorBox
+        An instance of an SeparatorBox.
+    minutes_label: Gtk.Label
+        The label of the spin button dedicated to select the number of minutes.
+    minutes_spin: Gtk.SpinButton
+        The spin button dedicated to select the number of minutes.
+    ms_separator: SeparatorBox
+        An instance of an SeparatorBox.
+    seconds_label: Gtk.Label
+        The label of the spin button dedicated to select the number of seconds.
+    seconds_spin: Gtk.SpinButton
+        The spin button dedicated to select the number of seconds.
+
+    Methods
+    -------
+    get_entry
+        Get the values of the timing selection's spin buttons.
+    """
+
     def __init__(self):
+        """Initialize a Gtk.Box with all the timing selection elements."""
+
         Gtk.Box.__init__(self, spacing=6)
         self.hour_label = Gtk.Label(label="Hours")
         adjustment_hours = Gtk.Adjustment(value=0,
@@ -352,6 +558,8 @@ class TimingBox(Gtk.Box):
     def get_entry(self):
         """The values of the timing selection's spin buttons.
 
+        Get each value from each spin button and return them in a dict.
+
         Returns
         -------
         timer_selected: dict
@@ -364,8 +572,63 @@ class TimingBox(Gtk.Box):
 
 
 class PresetGrid(Gtk.Grid):
-    """Container to all the preset management elements."""
+    """
+    Container to all the preset management elements.
+
+    Attributes
+    ----------
+    timer_box_access: Gtk.Box
+        The access to the TimerBox instance.
+    title_label: Gtk.Label
+        The title label to the preset part.
+    separator: SeparatorBox
+        An instance of an SeparatorBox.
+    entry_preset_name: Gtk.Entry
+        The name entry for a new preset or the new name for an existing preset.
+    add_button: Gtk.Button
+        The button to the add preset function.
+    set_button: Gtk.Button
+        The button to the set preset duration function.
+    rename_button: Gtk.Button
+        The button to the rename preset function.
+    select_preset_name: Gtk.ComboBoxText
+        The list of all the existing preset of a default placeholder.
+    del_button: Gtk.Button
+        The button to the delete preset function.
+
+    Methods
+    -------
+    refill_preset_list
+        Fill or refill list of existing presets.
+    selected_preset_to_spinbutton
+        Set the spinbuttons according to the preset selected.
+    warning_dialog
+        Display a warning message dialog.
+    error_dialog
+        Display an error message dialog.
+    info_dialog
+        Display an information message dialog.
+    get_preset_entry
+        Get the content of the entry.
+    add_new_preset
+        Add a new preset.
+    set_preset_duration
+        Set duration to an existing preset.
+    rename_preset
+        Rename an existing preset.
+    delete_preset
+        Delete an existing preset.
+    """
+
     def __init__(self, timer_box_access):
+        """Initialize a Gtk.Grid with all the preset part elements.
+
+        Parameters
+        ----------
+        timer_access: Gtk.box
+            An access to the TimerBox instance.
+        """
+
         Gtk.Grid.__init__(self)
         self.set_column_spacing(6)
         self.set_row_spacing(6)
@@ -440,13 +703,12 @@ class PresetGrid(Gtk.Grid):
         the "Choose a preset" default value or "No preset created yet" if there
         is no existing preset.
         """
+
         # Empty the list
         self.select_preset_name.remove_all()
-        # Create fake new preset to access to the get_all method
-        new_fake_preset = Preset("get_all")
 
         try:
-            all_preset_names = new_fake_preset.get_all()
+            all_preset_names = Preset.get_all()
 
             # Sort the names alphabetically
             all_preset_names.sort()
@@ -496,6 +758,7 @@ class PresetGrid(Gtk.Grid):
         Add an "OK" button to close the dialog. Manage in the same way a close
         action on the dialog by the user.
         """
+
         msg_dialog = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
                                        modal=True,
                                        message_type=Gtk.MessageType.WARNING,
@@ -516,6 +779,7 @@ class PresetGrid(Gtk.Grid):
         Add an "OK" button to close the dialog. Manage in the same way a close
         action on the dialog by the user.
         """
+
         msg_dialog = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
                                        modal=True,
                                        message_type=Gtk.MessageType.ERROR,
@@ -536,6 +800,7 @@ class PresetGrid(Gtk.Grid):
         Add an "OK" button to close the dialog. Manage in the same way a close
         action on the dialog by the user.
         """
+
         msg_dialog = Gtk.MessageDialog(buttons=Gtk.ButtonsType.NONE,
                                        modal=True,
                                        message_type=Gtk.MessageType.INFO,
@@ -552,6 +817,8 @@ class PresetGrid(Gtk.Grid):
     def get_preset_entry(self):
         """The content of the entry.
 
+        Get the content of the entry and return it stripped.
+
         Returns
         -------
         str
@@ -564,7 +831,7 @@ class PresetGrid(Gtk.Grid):
         """Add a new preset.
 
         Manage following issue by displaying the appropriate message:
-         - name does already exist
+         - Name entered does already exist
          - No name entered
          - Choosen duration equal 00:00:00
         If none of thses issues are raised, add the preset to the JSON preset
@@ -576,19 +843,17 @@ class PresetGrid(Gtk.Grid):
 
         # Check if it's empty and handle it
         if preset_name == "":
-            self.warning_dialog("No name entered",
-                                "Please enter a name")
+            self.warning_dialog("No name entered", "Please enter a name")
             return
 
         # Get the selected timing
         selection = timer_box_access.timing_box.get_entry()
-        #print(selection)
+
         if (selection["timer_hours"] == 0
             and selection["timer_min"] == 0
             and selection["timer_secs"] == 0):
             timer_box_access.zero_timing_dialog()
             return
-
 
         # Add new preset
         new_preset = Preset(preset_name,
@@ -605,20 +870,19 @@ class PresetGrid(Gtk.Grid):
             secondary_text = (f"{preset_name.capitalize()} - "
                               f"{str(new_preset_duration)}")
 
-            self.info_dialog("New preset added",
-                             secondary_text)
+            self.info_dialog("New preset added", secondary_text)
 
             # Reset the entry
             self.entry_preset_name.set_text("")
 
             # Actualize the list
             self.refill_preset_list()
+
         except ValueError:
             secondary_text = (f"The preset name {preset_name.capitalize()} "
                               f"already exist. Please choose an other name.")
 
-            self.error_dialog("Already existing name",
-                              secondary_text)
+            self.error_dialog("Already existing name", secondary_text)
 
     def set_preset_duration(self, button, timer_box_access) -> None:
         """Set duration to an existing preset.
@@ -633,8 +897,7 @@ class PresetGrid(Gtk.Grid):
 
         # Check if it's empty and handle it
         if preset_name == "":
-            self.warning_dialog("No name entered",
-                                "Please enter a name")
+            self.warning_dialog("No name entered", "Please enter a name")
             return
 
         # Check if it's one the placeholders/default values or None,
@@ -648,7 +911,7 @@ class PresetGrid(Gtk.Grid):
 
         # Get the selected timing
         selection = timer_box_access.timing_box.get_entry()
-        #print(selection)
+
         if (selection["timer_hours"] == 0
             and selection["timer_min"] == 0
             and selection["timer_secs"] == 0):
@@ -672,13 +935,12 @@ class PresetGrid(Gtk.Grid):
                                  f"{preset_name.capitalize()} - "
                                  f"{str(modified_duration)}")
         except ValueError:
-            # Should not happens : the list is built with the JSON file
+            # Should not happen: the list is built with the JSON file
             # If it happens, file was probably manipulated manually
             secondary_text = (f"The preset {preset_name.capitalize()} does not"
                               f" exist. Please choose an existing name.")
 
-            self.error_dialog("Not existing preset",
-                              secondary_text)
+            self.error_dialog("Not existing preset", secondary_text)
 
     def rename_preset(self, button) -> None:
         """Rename an existing preset.
@@ -694,8 +956,7 @@ class PresetGrid(Gtk.Grid):
 
         # Check if it's empty and handle it
         if preset_name == "":
-            self.warning_dialog("No name entered",
-                                "Please enter a name")
+            self.warning_dialog("No name entered", "Please enter a name")
             return
 
         # Check if it's one the placeholders/default values or None,
@@ -732,15 +993,15 @@ class PresetGrid(Gtk.Grid):
 
             # Actualize the list
             self.refill_preset_list()
+
         except ValueError:
-            # Should not happens : the list is built with the JSON file
+            # Should not happen: the list is built with the JSON file
             # If it happens, file was probably manipulated manually
             secondary_text = (f"The preset {preset_name.capitalize()} does not"
                               f" exist or the new name {new_name.capitalize()}"
                               f" is not available.")
 
-            self.error_dialog("Not existing preset",
-                              secondary_text)
+            self.error_dialog("Not existing preset", secondary_text)
 
     def delete_preset(self, button) -> None:
         """Delete an existing preset.
@@ -774,16 +1035,14 @@ class PresetGrid(Gtk.Grid):
 
             # Actualize the list
             self.refill_preset_list()
+
         except ValueError:
-            # Should not happens : the list is built with the JSON file
+            # Should not happen: the list is built with the JSON file
             # If it happens, file was probably manipulated manually
             secondary_text = (f"The preset {name.capitalize()} does not"
                               f" exist. Please choose an existing name.")
 
-            self.error_dialog("Not existing preset",
-                              secondary_text)
-
-
+            self.error_dialog("Not existing preset", secondary_text)
 
 
 if __name__ == '__main__':
